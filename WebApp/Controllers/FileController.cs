@@ -6,6 +6,9 @@ using Newtonsoft.Json.Linq;
 using WebApp.Models;
 using System.Drawing;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.Globalization;
+using CsvHelper;
+using CsvHelper.Configuration;
 
 [Route("[controller]")]
 public class FileController : Controller
@@ -19,8 +22,29 @@ public class FileController : Controller
         _configuration = configuration;
     }
 
+    [HttpGet("upload")]
+    public IActionResult UploadFile() {
+        return View();
+    }
 
-    public IActionResult Index() {
+    [HttpGet("category")]
+    public IActionResult CategoryFile()
+    {
+        return View();
+    }
+
+
+    [HttpPost("analizar")]
+    public IActionResult CategoryFile(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            ModelState.AddModelError("File", "Por favor, selecciona un archivo válido.");
+            return View();
+        }
+        
+
+
         return View();
     }
 
@@ -56,6 +80,8 @@ public class FileController : Controller
 
         var fileName = request.FileName;
         var chunk = request.Chunk;
+
+
 
         // Obtener los mapeos desde la base de datos
         var columnMappings = await getFileMapping(fileName);
@@ -94,10 +120,10 @@ public class FileController : Controller
     }
 
 
-    private Dictionary<string, object> FormatearChunk(List<string> chunk, string columnMappingsJson)
+    private List<Dictionary<string, object>> FormatearChunk(List<string> chunk, string columnMappingsJson)
     {
-        var columnasFormateadas = new Dictionary<string, object>();
-
+        List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
+        
         // Parsear el string JSON de los mapeos de columnas
         var columnMappings = JArray.Parse(columnMappingsJson);
 
@@ -106,6 +132,7 @@ public class FileController : Controller
         {
 
             var valores = fila.Split(',');
+            var columnasFormateadas = new Dictionary<string, object>();
 
             foreach (var mapping in columnMappings)
             {
@@ -136,8 +163,12 @@ public class FileController : Controller
                     }
                 }
             }
+            if (columnasFormateadas.Count > 0)
+            {
+                dataList.Add(columnasFormateadas);
+            }
         }
 
-        return columnasFormateadas;
+        return dataList;
     }
 }

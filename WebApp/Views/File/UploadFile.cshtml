@@ -32,7 +32,7 @@
 
             for (let i = 0; i < lines.length; i += chunkSize) {
                 const chunk = lines.slice(i, i + chunkSize);
-
+                console.log(chunk);
                 const response = await fetch('/File/EnviarChunk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

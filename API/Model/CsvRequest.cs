@@ -3,7 +3,7 @@
     public class CsvRequest
     {
         public string FileName { get; set; }
-        public Dictionary<string, string> Columnas { get; set; }
+        public List<Dictionary<string, string>> Columnas { get; set; }
   
     }
 }
