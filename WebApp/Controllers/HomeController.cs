@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using WebApp.Models;
 
 namespace WebApp.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -21,7 +23,10 @@ namespace WebApp.Controllers
 
         public IActionResult Index()
         {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
 
+            
             // Obtener la URL desde appsettings.json
             string apiUrl = _configuration.GetValue<string>("endpoint_api:url");
 

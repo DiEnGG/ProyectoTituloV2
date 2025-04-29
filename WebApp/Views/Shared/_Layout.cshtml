@@ -26,12 +26,78 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="File" asp-action="upload">Subir Archivo</a>
+
+                        <!-- Agrupación en dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="archivosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Archivos
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="archivosDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="File" asp-action="Upload">Subir Archivo</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="File" asp-action="Category">Categoria Archivo</a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="File" asp-action="category">Categoria Archivo</a>
+
+
+                        <!-- Agrupación en dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="UsuariosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Usuarios
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="UsuariosDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Usuarios" asp-action="Index">Listado</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Usuarios" asp-action="Create">Crear</a>
+                                </li>
+                            </ul>
                         </li>
+
+
+                        <!-- Agrupación en dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="EmpresasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Empresas
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="EmpresasDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Empresas" asp-action="Index">Listado</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Empresas" asp-action="Create">Crear</a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+                        <!-- Agrupación en dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="RolesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Roles
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="RolesDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Index">Listado</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Create">Crear</a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+
+                        <form asp-action="Logout" asp-controller="Login" method="post" class="form-inline">
+                            <button type="submit" class="btn btn-link">Cerrar sesión</button>
+                        </form>
+
+
+
                     </ul>
                 </div>
             </div>

@@ -11,15 +11,18 @@
 
 <hr/>
 
+<input type="text" id="category" value=""/>
 <input type="file" id="csvFile" />
 <button onclick="procesarCsv()">Enviar CSV</button>
 
 <script>
     async function procesarCsv() {
         const fileInput = document.getElementById('csvFile');
+        const fileCategory = document.getElementById('category').value;
         const file = fileInput.files[0];
-        if (!file) {
-            alert("Seleccioná un archivo");
+
+        if (!file || fileCategory.trim() === "") {
+            alert("Seleccioná un archivo y su categoria");
             return;
         }
 
@@ -38,7 +41,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chunk: chunk,
-                        fileName: "Testing_csv.csv"//fileName
+                        fileName: fileCategory
                     })
                 });
 

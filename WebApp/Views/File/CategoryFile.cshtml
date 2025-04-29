@@ -11,9 +11,11 @@
 
 <hr/>
 
-<form action="analizar" method="post">
-    <input type="file" id="csvFile" />
-    <button type="submit">Analizar Archivo</button>
+<form action="analizar" method="post" enctype="multipart/form-data">
+    <label>Nombre Categoria</label>
+    <input type="text" name="category" id="category" />
+    <input type="file" name="file" id="file"/>
+    <button type="submit">Crear Categoria</button>
 </form>
 
 

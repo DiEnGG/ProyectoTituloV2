@@ -60,7 +60,7 @@ namespace API.Controllers
                 await connection.OpenAsync();
                 MySqlCommand command = new MySqlCommand("sp_getFileMapping", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@filename", "Testing_csv.csv");
+                command.Parameters.AddWithValue("@filename", fileName);
 
                 // Ejecutar el procedimiento almacenado y leer los resultados
                 using (var reader = await command.ExecuteReaderAsync())
@@ -70,11 +70,12 @@ namespace API.Controllers
                         var mapping = new CsvMapping
                         {
                             //Id = reader.GetInt32("Id")
-                            FileName = reader.GetString("FileName")
+                            CategoriaId = reader.GetInt32("CategoriaId")
                             ,CsvColumnName = reader.GetString("CsvColumnName")
                             ,AuxColumnName = reader.GetString("AuxColumnName")
-                            ,CreatedAt = reader.GetDateTime("CreatedAt")
                             ,IndexCsvColumn = reader.GetInt32("IndexCsvColumn")
+                            ,CreatedAt = reader.GetDateTime("CreatedAt")
+                            
                         };
 
                         files.Add(mapping); // Agregar el mapeo a la lista
@@ -93,7 +94,7 @@ namespace API.Controllers
         public async Task<IActionResult> ProcesarChunk([FromBody] CsvRequest request)
         {
             // Verificar que el objeto CsvRequest tenga la estructura esperada
-            if (request == null || string.IsNullOrEmpty(request.FileName) || request.Columnas == null)
+            if (request == null || string.IsNullOrEmpty(request.FileName) || request.data == null)
             {
                 return BadRequest(new { mensaje = "Datos inválidos" });
             }
@@ -103,7 +104,7 @@ namespace API.Controllers
                 string connectionString = _configuration.GetConnectionString("MySqlConnection");
 
                 // Crear el objeto JSON a partir de las columnas recibidas
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(request.Columnas);
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(request.data);
 
                 // Conexión a la base de datos MySQL
                 using (var connection = new MySqlConnection(connectionString))
@@ -131,6 +132,57 @@ namespace API.Controllers
                 return StatusCode(500, new { mensaje = "Error al procesar el chunk", detalle = ex.Message });
             }
         }
+
+
+
+
+
+        [HttpPost("create-filecategory")]
+        public async Task<IActionResult> CreateFileCategory([FromBody] CsvRequest request)
+        {
+            // Verificar que el objeto CsvRequest tenga la estructura esperada
+            if (request == null || string.IsNullOrEmpty(request.FileName) || request.data == null)
+            {
+                return BadRequest(new { mensaje = "Datos inválidos" });
+            }
+
+            try
+            {
+                string connectionString = _configuration.GetConnectionString("MySqlConnection");
+
+                // Crear el objeto JSON a partir de las columnas recibidas
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(request.data);
+
+                // Conexión a la base de datos MySQL
+                using (var connection = new MySqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    using (var command = new MySqlCommand("sp_insertFileCategory", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        // Parámetros del procedimiento almacenado
+                        command.Parameters.AddWithValue("@filename", request.FileName);
+                        command.Parameters.AddWithValue("@data", json);
+
+                        // Ejecutar el procedimiento almacenado
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+
+                return Ok(new { mensaje = "Archivo procesado" });
+            }
+            catch (Exception ex)
+            {
+                // Manejo de errores
+                return StatusCode(500, new { mensaje = "Error al procesar el archivo", detalle = ex.Message });
+            }
+        }
+
+
+
+
 
     }
 }

@@ -1,0 +1,10 @@
+﻿@model Rol
+
+<h2>Eliminar Rol</h2>
+<p>¿Estás seguro de que deseas eliminar el rol <strong>@Model.Nombre</strong>?</p>
+
+<form asp-action="DeleteConfirmed">
+    <input type="hidden" asp-for="RolId" />
+    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

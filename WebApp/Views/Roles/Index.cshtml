@@ -1,0 +1,23 @@
+﻿@model List<Rol>
+
+<h2>Roles</h2>
+<a asp-action="Create" class="btn btn-primary">Nuevo Rol</a>
+
+<table class="table">
+    <thead>
+        <tr><th>Nombre</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.Nombre</td>
+                <td>@(r.Activo ? "Sí" : "No")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@r.RolId" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@r.RolId" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -9,16 +9,21 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using WebApp.Services;
+using Microsoft.AspNetCore.Authorization;
 
 [Route("[controller]")]
+[Authorize]
 public class FileController : Controller
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IApiService _apiService;
     private readonly IConfiguration _configuration;
 
-    public FileController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public FileController(IHttpClientFactory httpClientFactory, IApiService apiService, IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;
+        _apiService = apiService;
         _configuration = configuration;
     }
 
@@ -35,20 +40,47 @@ public class FileController : Controller
 
 
     [HttpPost("analizar")]
-    public IActionResult CategoryFile(IFormFile file)
+    public async Task<IActionResult> CategoryFile(string category, IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
             ModelState.AddModelError("File", "Por favor, selecciona un archivo válido.");
             return View();
         }
-        
+
+        int maxChunkSize = Int32.Parse(_configuration["ChunkSize"]);
+        var recommendedMapping = await CSVService.getRecommendedFileMapping(file, _configuration);
+
+        // Crear la estructura de datos que se enviará a la API
+        var datos = new
+        {
+            fileName = category
+            ,
+            data = recommendedMapping
+        };
 
 
-        return View();
+        // Enviar los datos a la API
+        var client = _httpClientFactory.CreateClient();
+        var json = JsonConvert.SerializeObject(datos);
+        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+
+        // Obtener la URL de la API desde appsettings.json
+        var apiUrl = _configuration["endpoint_api:url"]; // Accedemos a la URL configurada
+
+        var response = await client.PostAsync($"{apiUrl}/api/file/create-filecategory", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return StatusCode((int)response.StatusCode, "Error al procesar el archivo");
+        }
+
+        return Ok(new { mensaje = "Archivo procesado exitosamente" });
+
     }
 
-    private async Task<string> getFileMapping(string fileName)
+    private async Task<string> getFileMappingFromAPI(string fileName)
     {
         var client = _httpClientFactory.CreateClient();
 
@@ -84,7 +116,7 @@ public class FileController : Controller
 
 
         // Obtener los mapeos desde la base de datos
-        var columnMappings = await getFileMapping(fileName);
+        var columnMappings = await getFileMappingFromAPI(fileName);
         if (string.IsNullOrEmpty(columnMappings))
         {
             return BadRequest("No se encontraron mapeos para el archivo proporcionado.");
@@ -97,7 +129,7 @@ public class FileController : Controller
         var datos = new
         {
             fileName
-            ,columnas = dataFormated
+            ,data = dataFormated
         };
 
 
@@ -158,7 +190,8 @@ public class FileController : Controller
                     }
                     else if (auxColumnName.StartsWith("AuxDecimal"))
                     {
-                        decimal decimalValor = decimal.Parse(valor);
+                        //decimal decimalValor = decimal.Parse(valor);
+                        string decimalValor = valor;
                         columnasFormateadas[auxColumnName] = decimalValor;
                     }
                 }
