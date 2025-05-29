@@ -1,17 +1,54 @@
 ﻿@model LoginViewModel
 
-<h2>Iniciar sesión</h2>
+@{
+    Layout = null;
+}
 
-<form asp-action="Login" method="post">
-    <div class="form-group">
-        <label asp-for="Email"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Iniciar sesión</title>
+    <link rel="stylesheet" href="~/css/login.css" />
+</head>
+<body>
+    <div class="split-screen">
+        <div class="left">
+            <div id="particles-js"></div>
+
+            <div class="left-content">
+                <div class="logo-container">
+                    <img src="~/img/logo-autoreport.png" alt="Logo Autoreport" />
+                    <h1>Solucion al alcanze de tu mano</h1>
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div class="form-container">
+                <h2>Iniciar sesión</h2>
+                <form asp-action="Login" method="post">
+                    <div class="form-group">
+                        <label asp-for="Email">User Name</label>
+                        <input asp-for="Email" placeholder="User Name" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-login">Login</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label asp-for="Password"></label>
-        <input asp-for="Password" class="form-control" type="password" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Entrar</button>
-</form>
+    <script src="~/js/particles.min.js"></script>
+    <script>
+        particlesJS.load('particles-js', '/particles/particles.json', function () {
+            console.log('particles.js loaded');
+        });
+    </script>
+</body>
+</html>

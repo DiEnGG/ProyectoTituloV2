@@ -1,0 +1,103 @@
+﻿#particles-js {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.split-screen {
+    display: flex;
+    height: 100vh;
+}
+
+.left {
+    background-color: #000;
+    color: white;
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    position: relative; /* ←#particles-js funcione dentro */
+    overflow: hidden;
+}
+
+    .left .content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 2rem;
+    }
+.logo-container img {
+    max-width:500px;
+    height: auto;
+    margin-bottom: 1.5rem;
+}
+
+.right {
+    background-color: white;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 320px;
+    padding: 2rem;
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-login {
+    background-color: black;
+    color: white;
+}
+
+.btn-register {
+    background-color: #ccc;
+    color: black;
+}
