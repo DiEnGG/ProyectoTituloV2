@@ -100,11 +100,18 @@ public class FileController : Controller
 
         return jsonResponse;
     }
-
-
     [HttpPost("EnviarChunk")]
+
     public async Task<IActionResult> EnviarChunk([FromBody] ChunkRequest request)
     {
+        // Agrega este log para depuración en el método EnviarChunk
+        //Console.WriteLine($"Recibido chunk para archivo: {request.FileName}, cantidad de filas: {request.Chunk?.Count ?? 0}");
+        if (request == null)
+            return BadRequest("Request es null");
+        if (request.Chunk == null)
+            return BadRequest("Chunk es null");
+        if (string.IsNullOrEmpty(request.FileName))
+            return BadRequest("FileName es null o vacío");
         if (request == null || request.Chunk == null || string.IsNullOrEmpty(request.FileName)) 
         {
             return BadRequest("Datos Invalidos");
@@ -142,10 +149,11 @@ public class FileController : Controller
         var apiUrl = _configuration["endpoint_api:url"]; // Accedemos a la URL configurada
 
         var response = await client.PostAsync($"{apiUrl}/api/file/procesar", content);
+        var errorContent = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            return StatusCode((int)response.StatusCode, "Error al procesar el chunk");
+            return StatusCode((int)response.StatusCode, $"Error al procesar el chunk {errorContent}");
         }
 
         return Ok(new { mensaje = "Chunk procesado exitosamente" });
