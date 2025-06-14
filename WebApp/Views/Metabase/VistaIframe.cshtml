@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "Vista Interactiva Metabase";
+    var iframeUrl = ViewBag.IframeUrl as string;
+    var tipo = ViewBag.Tipo as string ?? "dashboard";
+    var id = ViewBag.Id ?? 1;
+}
+
+<h2>Visualización de Recursos Metabase</h2>
+
+<form id="iframeForm" method="get" asp-controller="Metabase" asp-action="VistaIframe">
+    <label for="tipo">Tipo:</label>
+    <select id="tipo" name="tipo">
+        <option value="dashboard" selected="@("dashboard" == tipo)">Dashboard</option>
+        <option value="question" selected="@("question" == tipo)">Question</option>
+    </select>
+
+    <label for="id">ID:</label>
+    <input type="number" id="id" name="id" value="@id" min="1" required />
+
+    <button type="submit">Ver</button>
+</form>
+
+@if (!string.IsNullOrEmpty(iframeUrl))
+{
+    <hr />
+    <iframe id="metabaseIframe" src="@iframeUrl" frameborder="0" width="100%" height="800" style="margin-top:20px;"></iframe>
+
+    <button id="guardarUrlBtn" style="margin-top:10px;">Guardar esta URL</button>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('guardarUrlBtn')?.addEventListener('click', function () {
+            const url = document.getElementById('metabaseIframe')?.src;
+            if (!url) return alert("No se encontró la URL");
+            fetch('/Metabase/GuardarUrl', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(url)
+            })
+            .then(res => res.ok ? alert("URL guardada correctamente") : alert("Error al guardar URL"));
+        });
+    </script>
+    }
