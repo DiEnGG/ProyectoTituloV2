@@ -1,18 +1,20 @@
 ﻿@model Rol
 
-<h2>@ViewData["Title"]</h2>
+<div class="centered-wrapper">
+    <form asp-action="Create" class="minimal-form big-form">
+        <h2 class="minimal-title">@ViewData["Title"]</h2>
+        <h2 class="minimal-title">Crear Roles</h2>
+        <label>
+            @Html.DisplayNameFor(m => m.Nombre)
+            <input asp-for="Nombre" type="text" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </label>
 
-<form asp-action="Create">
-    <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
-    </div>
+        <label class="checkbox-label">
+            <input asp-for="Activo" type="checkbox" />
+            @Html.DisplayNameFor(m => m.Activo)
+        </label>
 
-    <div class="form-check">
-        <input asp-for="Activo" class="form-check-input" />
-        <label asp-for="Activo" class="form-check-label">Activo</label>
-    </div>
-
-    <button type="submit" class="btn btn-success">Guardar</button>
-</form>
+        <button type="submit">Guardar</button>
+    </form>
+</div>

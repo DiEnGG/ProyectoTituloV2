@@ -1,23 +1,33 @@
 ﻿@model List<Rol>
 
-<h2>Roles</h2>
-<a asp-action="Create" class="btn btn-primary">Nuevo Rol</a>
+<h2 class="minimal-title">Listado de Roles</h2>
 
-<table class="table">
-    <thead>
-        <tr><th>Nombre</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var r in Model)
-        {
+<a asp-action="Create" class="btn-add">Nuevo Rol</a>
+
+<div class="table-wrapper">
+    <table class="minimal-table">
+        <thead>
             <tr>
-                <td>@r.Nombre</td>
-                <td>@(r.Activo ? "Sí" : "No")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@r.RolId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@r.RolId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
+                <th>Nombre</th>
+                <th>Activo</th>
+                <th>Acciones</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr class="estado-fila @(r.Activo ? "si" : "no")">
+               
+                    <td>@r.Nombre</td>
+                    <td>@(r.Activo ? "Sí" : "No")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@r.RolId" class="btn-action">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@r.RolId" class="btn-action danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+

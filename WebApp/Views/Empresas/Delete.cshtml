@@ -1,10 +1,14 @@
 ﻿@model Empresa
 
-<h2>Eliminar Empresa</h2>
-<p>¿Estás seguro de que deseas eliminar la empresa <strong>@Model.Nombre</strong>?</p>
+<div class="centered-wrapper">
+    <div class="delete-card">
+        <h2 class="minimal-title">Eliminar Empresa</h2>
+        <p>¿Estás seguro de que deseas eliminar la empresa <strong>@Model.Nombre</strong>?</p>
 
-<form asp-action="DeleteConfirmed">
-    <input type="hidden" asp-for="EmpresaId" />
-    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+        <form asp-action="DeleteConfirmed" method="post" class="delete-form">
+            <input type="hidden" asp-for="EmpresaId" />
+            <button type="submit" class="btn-delete">Sí, eliminar</button>
+            <a asp-action="Index" class="btn-cancel">Cancelar</a>
+        </form>
+    </div>
+</div>

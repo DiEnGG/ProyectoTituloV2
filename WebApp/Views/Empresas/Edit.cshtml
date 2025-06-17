@@ -1,25 +1,26 @@
 ﻿@model Empresa
 
-<h2>@ViewData["Title"]</h2>
+<div class="centered-wrapper">
+    <form asp-action="Save" class="minimal-form big-form">
+        <h2 class="minimal-title">@(Model.EmpresaId == 0 ? "Crear Empresa" : "Editar Empresa")</h2>
 
-<form asp-action="Edit">
-    <input type="hidden" asp-for="EmpresaId" />
-    <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
-    </div>
+        <label>
+            Nombre
+            <input asp-for="Nombre" type="text" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </label>
 
-    <div class="mb-3">
-        <label asp-for="RazonSocial" class="form-label"></label>
-        <input asp-for="RazonSocial" class="form-control" />
-        <span asp-validation-for="RazonSocial" class="text-danger"></span>
-    </div>
+        <label>
+            Razón Social
+            <input asp-for="RazonSocial" type="text" />
+            <span asp-validation-for="RazonSocial" class="text-danger"></span>
+        </label>
 
-    <div class="form-check">
-        <input asp-for="Activo" class="form-check-input" />
-        <label asp-for="Activo" class="form-check-label">Activo</label>
-    </div>
+        <label class="checkbox-label">
+            <input asp-for="Activo" type="checkbox" />
+            Activo
+        </label>
 
-    <button type="submit" class="btn btn-success">Guardar</button>
-</form>
+        <button type="submit">Guardar</button>
+    </form>
+</div>

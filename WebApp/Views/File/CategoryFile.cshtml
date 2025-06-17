@@ -1,21 +1,23 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-
+﻿@{
+    ViewData["Title"] = "Categoría de Archivos";
 }
 
-<h2>
-    Categoria de Archivos
-</h2>
+<div class="centered-wrapper">
+    <form action="analizar" method="post" enctype="multipart/form-data" class="minimal-form">
+        <h2 class="minimal-title">Categoría de Archivos</h2>
 
-<hr/>
+        <label>
+            Nombre Categoría
+            <input type="text" name="category" id="category" placeholder="Ej: Cotizaciones" />
+        </label>
 
-<form action="analizar" method="post" enctype="multipart/form-data">
-    <label>Nombre Categoria</label>
-    <input type="text" name="category" id="category" />
-    <input type="file" name="file" id="file"/>
-    <button type="submit">Crear Categoria</button>
-</form>
+        <label>
+            Archivo CSV
+            <input type="file" name="file" id="file" />
+        </label>
+
+        <button type="submit">Crear Categoría</button>
+    </form>
+</div>
 
 

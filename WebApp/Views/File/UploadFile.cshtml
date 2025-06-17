@@ -1,19 +1,24 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-
+﻿@{
+    ViewData["Title"] = "Subir Archivo";
 }
 
-<h2>
-    Subir Archivo
-</h2>
+<div class="centered-wrapper">
+    <form class="minimal-form" onsubmit="event.preventDefault(); procesarCsv();">
+        <h2 class="minimal-title">Subir Archivo</h2>
 
-<hr/>
+        <label>
+            Categoría
+            <input type="text" id="category" placeholder="Ej: Ventas_enero" />
+        </label>
 
-<input type="text" id="category" value=""/>
-<input type="file" id="csvFile" />
-<button onclick="procesarCsv()">Enviar CSV</button>
+        <label>
+            Archivo CSV
+            <input type="file" id="csvFile" />
+        </label>
+
+        <button type="submit">Enviar CSV</button>
+    </form>
+</div>
 
 <script>
     async function procesarCsv() {
@@ -22,20 +27,21 @@
         const file = fileInput.files[0];
 
         if (!file || fileCategory.trim() === "") {
-            alert("Seleccioná un archivo y su categoria");
+            alert("Selecciona un archivo y su categoría.");
             return;
         }
 
-        const chunkSize = 100; // cantidad de filas por chunk
+        const chunkSize = 100;
         const reader = new FileReader();
 
         reader.onload = async function (e) {
             const text = e.target.result;
-            const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+            const lines = text.split(/\\r?\\n/).filter(l => l.trim() !== '');
 
             for (let i = 0; i < lines.length; i += chunkSize) {
                 const chunk = lines.slice(i, i + chunkSize);
                 console.log(chunk);
+
                 const response = await fetch('/File/EnviarChunk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -51,7 +57,7 @@
                 }
             }
 
-            //alert("Archivo procesado exitosamente");
+            alert("Archivo procesado exitosamente");
         };
 
         reader.readAsText(file);
