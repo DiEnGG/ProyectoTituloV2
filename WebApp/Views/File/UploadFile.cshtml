@@ -38,7 +38,7 @@
 
         reader.onload = async function (e) {
             const text = e.target.result;
-            const lines = text.split(/\\r?\\n/).filter(l => l.trim() !== '');
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
 
             for (let i = 0; i < lines.length; i += chunkSize) {
                 const chunk = lines.slice(i, i + chunkSize);

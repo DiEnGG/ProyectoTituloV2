@@ -136,6 +136,8 @@ public class FileController : Controller
 
         var categoryId = request.categoryId;
         var chunk = request.Chunk;
+        //List<string> chunk = request.Chunk.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
+
 
 
 

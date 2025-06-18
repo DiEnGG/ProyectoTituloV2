@@ -215,12 +215,17 @@ BEGIN
     DECLARE newCategoriaId INT;
     DECLARE i INT DEFAULT 0;
     DECLARE total INT;
-    DECLARE empresaId INT;
+    DECLARE empIdEncontrada INT;
     
-    SET empresaId = (SELECT EmpresaId from usuarios where UsuarioId = userId limit 1);
+    SET empIdEncontrada = (SELECT EmpresaId from proyectotitulo.usuarios where UsuarioId = userId limit 1);
     
-	INSERT INTO categoriasarchivo (Nombre, Descripcion, EmpresaId, UsuarioId, FechaCreacion, Delimiter)
-	VALUES (filename, fileDesc, empresaId, userId, now(), fileDelimiter);
+    IF empIdEncontrada IS NULL THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Error: empresaId no se pudo obtener para el usuario';
+	END IF;
+    
+	INSERT INTO proyectotitulo.categoriasarchivo (Nombre, Descripcion, EmpresaId, UsuarioId, FechaCreacion, Delimiter)
+	VALUES (filename, fileDesc, empIdEncontrada, userId, now(), fileDelimiter);
     
     -- Capturar el ID del registro insertado
 	SET newCategoriaId = LAST_INSERT_ID();
@@ -231,7 +236,7 @@ BEGIN
     -- Bucle para recorrer cada registro del JSON
     WHILE i < total DO
         
-		INSERT INTO archivosmapping
+		INSERT INTO proyectotitulo.archivosmapping
 				(
 					CategoriaId,
 					CsvColumnName,
@@ -251,7 +256,10 @@ BEGIN
     
 END$$
 DELIMITER ;
-DELIMITER $$
+
+SELECT * FROM proyectotitulo.archivosmapping;
+
+select * from datosDELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertFileData`(IN p_categoryId int, IN data JSON)
 BEGIN
     DECLARE i INT DEFAULT 0;
@@ -306,11 +314,11 @@ BEGIN
         )
         VALUES (
             newArchivoId,
-            JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString1'))),
-            JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString2'))),
-            JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString3'))),
-            JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString4'))),
-            JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString5'))),
+            REPLACE(JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString1'))), '"', ''),
+            REPLACE(JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString2'))), '"', ''),
+            REPLACE(JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString3'))), '"', ''),
+            REPLACE(JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString4'))), '"', ''),
+            REPLACE(JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$[', i, '].AuxString5'))), '"', ''),
             JSON_EXTRACT(data, CONCAT('$[', i, '].AuxDecimal1')),
             JSON_EXTRACT(data, CONCAT('$[', i, '].AuxDecimal2')),
             JSON_EXTRACT(data, CONCAT('$[', i, '].AuxDecimal3')),
@@ -327,6 +335,7 @@ BEGIN
     END WHILE;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarCategoriasArchivos`(
    IN p_UserId int
