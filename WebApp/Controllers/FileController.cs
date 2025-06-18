@@ -11,6 +11,8 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using WebApp.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 [Route("[controller]")]
 [Authorize]
@@ -28,7 +30,21 @@ public class FileController : Controller
     }
 
     [HttpGet("upload")]
-    public IActionResult UploadFile() {
+    public async Task<IActionResult> UploadFile() 
+    {
+        // Obtener la URL de la API desde appsettings.json
+        var client = _httpClientFactory.CreateClient();
+        var apiUrl = _configuration["endpoint_api:url"];
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var response = await client.GetAsync($"{apiUrl}/api/file/get-categorys?userid={userId}");
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+        var categorias = JsonConvert.DeserializeObject<List<CategoryResponse>>(jsonResponse);
+
+        ViewBag.Categorias = categorias;
+
+
         return View();
     }
 
@@ -40,21 +56,22 @@ public class FileController : Controller
 
 
     [HttpPost("analizar")]
-    public async Task<IActionResult> CategoryFile(string category, IFormFile file)
+    public async Task<IActionResult> CategoryFile(CategoryFile cf, IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        if (file == null || file.Length == 0 || !ModelState.IsValid)
         {
             ModelState.AddModelError("File", "Por favor, selecciona un archivo válido.");
             return View();
         }
 
-        int maxChunkSize = Int32.Parse(_configuration["ChunkSize"]);
-        var recommendedMapping = await CSVService.getRecommendedFileMapping(file, _configuration);
+       // int maxChunkSize = Int32.Parse(_configuration["ChunkSize"]);
+        var recommendedMapping = await CSVService.getRecommendedFileMapping(file, _configuration, cf.delimiter);
 
         // Crear la estructura de datos que se enviará a la API
+        cf.UsuarioId = Int32.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var datos = new
         {
-            fileName = category
+            categoria = cf
             ,
             data = recommendedMapping
         };
@@ -80,7 +97,7 @@ public class FileController : Controller
 
     }
 
-    private async Task<string> getFileMappingFromAPI(string fileName)
+    private async Task<string> getFileMappingFromAPI(int CategoryId)
     {
         var client = _httpClientFactory.CreateClient();
 
@@ -88,7 +105,7 @@ public class FileController : Controller
         var apiUrl = _configuration["endpoint_api:url"];
 
         // Llamada a la API para obtener el mapeo de columnas
-        var response = await client.GetAsync($"{apiUrl}/api/file/get-mapping?fileName={fileName}");
+        var response = await client.GetAsync($"{apiUrl}/api/file/get-mapping?CategoryId={CategoryId}");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -100,8 +117,8 @@ public class FileController : Controller
 
         return jsonResponse;
     }
-    [HttpPost("EnviarChunk")]
 
+    [HttpPost("EnviarChunk")]
     public async Task<IActionResult> EnviarChunk([FromBody] ChunkRequest request)
     {
         // Agrega este log para depuración en el método EnviarChunk
@@ -110,20 +127,20 @@ public class FileController : Controller
             return BadRequest("Request es null");
         if (request.Chunk == null)
             return BadRequest("Chunk es null");
-        if (string.IsNullOrEmpty(request.FileName))
+        if (string.IsNullOrEmpty(request.categoryId.ToString()))
             return BadRequest("FileName es null o vacío");
-        if (request == null || request.Chunk == null || string.IsNullOrEmpty(request.FileName)) 
+        if (request == null || request.Chunk == null || string.IsNullOrEmpty(request.categoryId.ToString())) 
         {
             return BadRequest("Datos Invalidos");
         }
 
-        var fileName = request.FileName;
+        var categoryId = request.categoryId;
         var chunk = request.Chunk;
 
 
 
         // Obtener los mapeos desde la base de datos
-        var columnMappings = await getFileMappingFromAPI(fileName);
+        var columnMappings = await getFileMappingFromAPI(categoryId);
         if (string.IsNullOrEmpty(columnMappings))
         {
             return BadRequest("No se encontraron mapeos para el archivo proporcionado.");
@@ -133,10 +150,11 @@ public class FileController : Controller
         var dataFormated = FormatearChunk(chunk, columnMappings);
 
         // Crear la estructura de datos que se enviará a la API
+        CategoryFile cr = new CategoryFile { CategoriaId = categoryId, Nombre = "", Descripcion = "", delimiter = "" };
         var datos = new
         {
-            fileName
-            ,data = dataFormated
+            categoria = cr,
+            data = dataFormated
         };
 
 
@@ -170,8 +188,8 @@ public class FileController : Controller
         // Procesar cada fila en el chunk
         foreach (var fila in chunk)
         {
-
-            var valores = fila.Split(',');
+            string delimiter = columnMappings[0]["delimiter"].ToString();
+            var valores = fila.Split(delimiter);
             var columnasFormateadas = new Dictionary<string, object>();
 
             foreach (var mapping in columnMappings)

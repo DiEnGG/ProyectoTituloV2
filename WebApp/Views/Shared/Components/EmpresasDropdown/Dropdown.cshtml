@@ -1,0 +1,26 @@
+﻿@model List<Empresa>
+
+<form class="d-flex ms-3 align-items-center">
+    <label for="empresaDropdown" class="form-label me-2 mb-0 text-nowrap">Empresa:</label>
+    <select id="empresaDropdown" class="form-select" style="width: 200px;">
+        <option value="">-- Selecciona una empresa --</option>
+        @foreach (var empresa in Model)
+        {
+            <option value="@empresa.EmpresaId">@empresa.Nombre</option>
+        }
+    </select>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var ddl = document.getElementById('empresaDropdown');
+        if (ddl) {
+            ddl.addEventListener('change', function () {
+                var empresaId = this.value;
+                if (empresaId) {
+                    window.location.href = '/Empresas/Panel/' + empresaId;
+                }
+            });
+        }
+    });
+</script>

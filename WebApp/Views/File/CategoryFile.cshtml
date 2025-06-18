@@ -1,16 +1,19 @@
-﻿@{
-    ViewData["Title"] = "Categoría de Archivos";
-}
+
+@model WebApp.Models.CategoryFile
 
 <div class="centered-wrapper">
-    <form action="analizar" method="post" enctype="multipart/form-data" class="minimal-form">
+    <form asp-action="analizar" method="post" enctype="multipart/form-data" class="minimal-form">
         <h2 class="minimal-title">Categoría de Archivos</h2>
 
-        <label>
-            Nombre Categoría
-            <input type="text" name="category" id="category" placeholder="Ej: Cotizaciones" />
+        <label>Nombre Categoria
+          <input asp-for="Nombre" type="text" name="Nombre" />
         </label>
-
+        <label>Descripcion
+          <input asp-for="Descripcion" type="text" name="Descripcion" placeholder="Opcional"/>
+        </label>
+        <label>Delimitador
+          <input asp-for="delimiter" typeof="text" name="delimiter" />
+        </label>
         <label>
             Archivo CSV
             <input type="file" name="file" id="file" />
@@ -19,5 +22,6 @@
         <button type="submit">Crear Categoría</button>
     </form>
 </div>
+
 
 

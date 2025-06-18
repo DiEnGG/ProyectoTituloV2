@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Subir Archivo";
 }
 
@@ -8,13 +8,20 @@
 
         <label>
             Categoría
-            <input type="text" id="category" placeholder="Ej: Ventas_enero" />
+            <select name="CategoriaId" class="form-control" id="category">
+                <option value="">Seleccione una categoría</option>
+                @foreach (var categoria in ViewBag.Categorias)
+                {
+                    <option value="@categoria.CategoriaId">@categoria.Nombre</option>
+                }
+            </select>
         </label>
 
         <label>
             Archivo CSV
             <input type="file" id="csvFile" />
         </label>
+
 
         <button type="submit">Enviar CSV</button>
     </form>
@@ -47,7 +54,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chunk: chunk,
-                        fileName: fileCategory
+                        categoryId: fileCategory
                     })
                 });
 

@@ -1,0 +1,8 @@
+﻿@model Empresa
+
+<h2>Panel de la empresa: @Model.Nombre</h2>
+<p><strong>Razón Social:</strong> @Model.RazonSocial</p>
+<p><strong>Empresa Id:</strong> @Model.EmpresaId</p>
+<p><strong>Estado:</strong> @(Model.Activo ? "Activa" : "Inactiva")</p>
+
+<!-- Personaliza aquí todo lo que quieras mostrar de la empresa -->

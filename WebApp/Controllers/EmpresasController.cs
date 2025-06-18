@@ -16,9 +16,22 @@ public class EmpresasController : Controller
     public async Task<IActionResult> Index()
     {
         var empresas = await _apiService.GetAsync<Empresa>(_endpoint);
+        if (empresas == null || empresas.Count == 0)
+        {
+            ModelState.AddModelError("", "No se encontraron empresas.");
+            return View(new List<Empresa>());
+        }
+
         return View(empresas);
     }
+    public async Task<IActionResult> Panel(int id)
+    {
+        var empresa = await _apiService.GetByIdAsync<Empresa>(_endpoint, id);
+        if (empresa == null)
+            return NotFound();
 
+        return View(empresa); // Esto buscará Views/Empresas/Panel.cshtml
+    }
     public IActionResult Create()
     {
         return View();

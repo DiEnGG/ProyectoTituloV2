@@ -70,6 +70,33 @@
                     <span class="label">Cerrar sesión</span>
                 </button>
             </form>
+            <!-- Agrupación en dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-dark" href="#" id="RolesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Roles
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="RolesDropdown">
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Index">Listado</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Create">Crear</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-dark" href="#" id="archivosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Archivos
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="Metabase vista">
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="Editor">Editar informe</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="VistaIframe">Agregar y ver iframe metabase</a>
+                        </li>
+                    </ul>
+                </li>
         </nav>
 
         <div class="main-area">
@@ -97,6 +124,7 @@
         </div>
     </div>
 
+
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -117,6 +145,7 @@
     html.classList.add(savedTheme);
     updateButton(savedTheme);
 
+
     toggleBtn.addEventListener('click', () => {
         const newTheme = html.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
         html.classList.remove('dark-mode', 'light-mode');
@@ -135,8 +164,6 @@
         }
     }
 </script>
-
-    @RenderSection("Scripts", required: false)
 
 </body>
 </html>
