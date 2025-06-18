@@ -20,37 +20,37 @@ namespace API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet("get-files")]
-        public IActionResult GetFiles()
-        {
-            List<object> files = new List<object>();
-            string connectionString = _configuration.GetConnectionString("MySqlConnection");
+        //[HttpGet("get-files")]
+        //public IActionResult GetFiles()
+        //{
+        //    List<object> files = new List<object>();
+        //    string connectionString = _configuration.GetConnectionString("MySqlConnection");
 
-            using (var connection = new MySqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "SELECT * FROM csvdata"; // Ajusta la consulta según tu tabla
-                using (var cmd = new MySqlCommand(query, connection))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        files.Add(new
-                        {
-                            Id = reader.GetInt32("Id"),
-                            FileName = reader.GetString("FileName"),
-                            AuxString1 = reader.IsDBNull(reader.GetOrdinal("AuxString1")) ? null : reader.GetString("AuxString1"),
-                            AuxString2 = reader.IsDBNull(reader.GetOrdinal("AuxString2")) ? null : reader.GetString("AuxString2"),
-                            AuxString3 = reader.IsDBNull(reader.GetOrdinal("AuxString3")) ? null : reader.GetString("AuxString3")
-                        });
-                    }
-                }
-            }
-            return Ok(files);
-        }
+        //    using (var connection = new MySqlConnection(connectionString))
+        //    {
+        //        connection.Open();
+        //        string query = "SELECT * FROM csvdata"; // Ajusta la consulta según tu tabla
+        //        using (var cmd = new MySqlCommand(query, connection))
+        //        using (var reader = cmd.ExecuteReader())
+        //        {
+        //            while (reader.Read())
+        //            {
+        //                files.Add(new
+        //                {
+        //                    Id = reader.GetInt32("Id"),
+        //                    FileName = reader.GetString("FileName"),
+        //                    AuxString1 = reader.IsDBNull(reader.GetOrdinal("AuxString1")) ? null : reader.GetString("AuxString1"),
+        //                    AuxString2 = reader.IsDBNull(reader.GetOrdinal("AuxString2")) ? null : reader.GetString("AuxString2"),
+        //                    AuxString3 = reader.IsDBNull(reader.GetOrdinal("AuxString3")) ? null : reader.GetString("AuxString3")
+        //                });
+        //            }
+        //        }
+        //    }
+        //    return Ok(files);
+        //}
 
         [HttpGet("get-mapping")]
-        public async Task<IActionResult> GetFileMapping(string fileName)
+        public async Task<IActionResult> GetFileMapping(int CategoryId)
         {
             List<CsvMapping> files = new List<CsvMapping>(); // Lista de objetos CsvMapping para almacenar los resultados
             string connectionString = _configuration.GetConnectionString("MySqlConnection");
@@ -60,7 +60,7 @@ namespace API.Controllers
                 await connection.OpenAsync();
                 MySqlCommand command = new MySqlCommand("sp_getFileMapping", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@filename", fileName);
+                command.Parameters.AddWithValue("@p_CategoryId", CategoryId);
 
                 // Ejecutar el procedimiento almacenado y leer los resultados
                 using (var reader = await command.ExecuteReaderAsync())
@@ -71,11 +71,17 @@ namespace API.Controllers
                         {
                             //Id = reader.GetInt32("Id")
                             CategoriaId = reader.GetInt32("CategoriaId")
-                            ,CsvColumnName = reader.GetString("CsvColumnName")
-                            ,AuxColumnName = reader.GetString("AuxColumnName")
-                            ,IndexCsvColumn = reader.GetInt32("IndexCsvColumn")
-                            ,CreatedAt = reader.GetDateTime("CreatedAt")
-                            
+                            ,
+                            CsvColumnName = reader.GetString("CsvColumnName")
+                            ,
+                            AuxColumnName = reader.GetString("AuxColumnName")
+                            ,
+                            IndexCsvColumn = reader.GetInt32("IndexCsvColumn")
+                            ,
+                            CreatedAt = reader.GetDateTime("CreatedAt")
+                            ,
+                            delimiter = reader.GetString("delimiter")
+
                         };
 
                         files.Add(mapping); // Agregar el mapeo a la lista
@@ -94,7 +100,7 @@ namespace API.Controllers
         public async Task<IActionResult> ProcesarChunk([FromBody] CsvRequest request)
         {
             // Verificar que el objeto CsvRequest tenga la estructura esperada
-            if (request == null || string.IsNullOrEmpty(request.FileName) || request.data == null)
+            if (request == null || string.IsNullOrEmpty(request.categoria.CategoriaId.ToString()) || request.data == null)
             {
                 return BadRequest(new { mensaje = "Datos inválidos" });
             }
@@ -116,7 +122,7 @@ namespace API.Controllers
                         command.CommandType = CommandType.StoredProcedure;
 
                         // Parámetros del procedimiento almacenado
-                        command.Parameters.AddWithValue("@filename", request.FileName);
+                        command.Parameters.AddWithValue("@p_categoryId", request.categoria.CategoriaId);
                         command.Parameters.AddWithValue("@data", json);
 
                         // Ejecutar el procedimiento almacenado
@@ -133,15 +139,11 @@ namespace API.Controllers
             }
         }
 
-
-
-
-
         [HttpPost("create-filecategory")]
         public async Task<IActionResult> CreateFileCategory([FromBody] CsvRequest request)
         {
             // Verificar que el objeto CsvRequest tenga la estructura esperada
-            if (request == null || string.IsNullOrEmpty(request.FileName) || request.data == null)
+            if (request == null || string.IsNullOrEmpty(request.categoria.Nombre) || request.data == null)
             {
                 return BadRequest(new { mensaje = "Datos inválidos" });
             }
@@ -163,7 +165,10 @@ namespace API.Controllers
                         command.CommandType = CommandType.StoredProcedure;
 
                         // Parámetros del procedimiento almacenado
-                        command.Parameters.AddWithValue("@filename", request.FileName);
+                        command.Parameters.AddWithValue("@userId", request.categoria.UsuarioId);
+                        command.Parameters.AddWithValue("@filename", request.categoria.Nombre);
+                        command.Parameters.AddWithValue("@fileDesc", request.categoria.Descripcion);
+                        command.Parameters.AddWithValue("@fileDelimiter", request.categoria.delimiter);
                         command.Parameters.AddWithValue("@data", json);
 
                         // Ejecutar el procedimiento almacenado
@@ -180,6 +185,44 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("get-categorys")]
+        public async Task<IActionResult> GetCategorys(int userid)
+        {
+            ///var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            List<CategoryResponse> categoryList = new List<CategoryResponse>();
+            string connectionString = _configuration.GetConnectionString("MySqlConnection");
+
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                MySqlCommand command = new MySqlCommand("sp_ListarCategoriasArchivos", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@p_UserId", userid);
+
+                // Ejecutar el procedimiento almacenado y leer los resultados
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var category = new CategoryResponse
+                        {
+                            CategoriaId = reader.GetInt32("CategoriaId"),
+                            Nombre = reader.GetString("Nombre"),
+                            Descripcion = reader.GetString("Descripcion"),
+                            EmpresaId = reader.GetInt32("EmpresaId"),
+                            NombreEmpresa = reader.GetString("NombreEmpresa")
+                        };
+
+                        categoryList.Add(category); // Agregar el mapeo a la lista
+                    }
+                }
+            }
+
+            // Convertir la lista a JSON
+            string jsonResponse = JsonConvert.SerializeObject(categoryList);
+
+            return Ok(jsonResponse); // Retornar los datos en formato JSON
+        }
 
 
 

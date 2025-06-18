@@ -23,15 +23,15 @@ public class LoginController : Controller
         if (!ModelState.IsValid)
             return View("Index" ,model);
 
-        var response = await _apiService.PostAsync(_endpoint, model);
+        var response = await _apiService.LoginPostAsync<LoginResponse>(_endpoint, model);
 
-        if (response)
+        if (response.Exito == true)
         {
             // Guardar la cookie
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, model.Email)
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, response.UsuarioId.ToString())
+            };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

@@ -11,25 +11,15 @@
 
 <hr/>
 
-<select name="CategoriaId" class="form-control" id="category">
-    <option value="">Seleccione una categoría</option>
-    @foreach (var categoria in ViewBag.Categorias)
-    {
-        <option value="@categoria.CategoriaId">@categoria.Nombre</option>
-    }
-</select>
-
 <input type="file" id="csvFile" />
 <button onclick="procesarCsv()">Enviar CSV</button>
 
 <script>
     async function procesarCsv() {
         const fileInput = document.getElementById('csvFile');
-        const fileCategory = document.getElementById('category').value;
         const file = fileInput.files[0];
-
-        if (!file || fileCategory.trim() === "") {
-            alert("Seleccioná un archivo y su categoria");
+        if (!file) {
+            alert("Seleccioná un archivo");
             return;
         }
 
@@ -42,13 +32,13 @@
 
             for (let i = 0; i < lines.length; i += chunkSize) {
                 const chunk = lines.slice(i, i + chunkSize);
-                console.log(chunk);
+
                 const response = await fetch('/File/EnviarChunk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chunk: chunk,
-                        categoryId: fileCategory
+                        fileName: "Testing_csv.csv"//fileName
                     })
                 });
 
