@@ -41,7 +41,7 @@ public class MetabaseController : Controller
         {
             ["resource"] = resource,
             ["params"] = new Dictionary<string, object>(),
-            ["exp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + (10 * 60)
+            ["exp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + (365 * 24 * 60 * 60)//1 año de expiración
         };
 
         var secret = "fdf23e24b9fbf97c3ee5bd654054f7db09fcc42fee1371c7cec617a84ba26c89";
