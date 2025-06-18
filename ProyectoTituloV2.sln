@@ -13,6 +13,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL Scripts", "SQL Scripts"
 		Scripts\Tablas SQL 2.sql = Scripts\Tablas SQL 2.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compose", "Compose", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Desktop\Compose\docker-compose.yml = ..\..\..\..\Desktop\Compose\docker-compose.yml
+		..\..\..\..\Desktop\Compose\README.txt = ..\..\..\..\Desktop\Compose\README.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "puppeteer-pdf", "puppeteer-pdf", "{03161519-81E9-4FAE-A13D-B99452714B54}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Desktop\Compose\puppeteer-pdf\Dockerfile = ..\..\..\..\Desktop\Compose\puppeteer-pdf\Dockerfile
+		..\..\..\..\Desktop\Compose\puppeteer-pdf\package.json = ..\..\..\..\Desktop\Compose\puppeteer-pdf\package.json
+		..\..\..\..\Desktop\Compose\puppeteer-pdf\pdf-server.js = ..\..\..\..\Desktop\Compose\puppeteer-pdf\pdf-server.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +43,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{03161519-81E9-4FAE-A13D-B99452714B54} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D12E07D6-0D58-4C05-BAE1-B36466337566}
 	EndGlobalSection
 EndGlobal

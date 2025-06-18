@@ -1,0 +1,210 @@
+﻿@using System.Text.Json
+@{
+    ViewData["Title"] = "Editor";
+    var metabaseIframeUrl = ViewBag.IframeUrl as string;
+}
+<h1>@ViewData["Title"]</h1>
+
+<link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet" />
+<div id="gjs" style="height:600px; border:1px solid #ccc"></div>
+<script src="https://unpkg.com/grapesjs-blocks-basic"></script>
+<script src="https://unpkg.com/grapesjs-plugin-forms"></script>
+<script src="https://unpkg.com/grapesjs-navbar"></script>
+<script src="https://unpkg.com/grapesjs-component-countdown"></script>
+<script src="https://unpkg.com/grapesjs-style-bg"></script>
+<script src="https://unpkg.com/grapesjs-tooltip"></script>
+<script src="https://unpkg.com/grapesjs-tui-image-editor"></script>
+<script src="https://unpkg.com/grapesjs-custom-code"></script>
+<script src="https://unpkg.com/grapesjs-touch"></script>
+<script src="https://unpkg.com/grapesjs"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+
+<script>
+    var metabaseIframeUrl = @Html.Raw(JsonSerializer.Serialize(metabaseIframeUrl));
+    console.log('metabaseIframeUrl:', metabaseIframeUrl);
+      var editor = grapesjs.init({
+      container: '#gjs',
+      height: '600px',
+      fromElement: true,
+      storageManager: false,
+      plugins: [
+        'gjs-blocks-basic',
+        'gjs-plugin-forms',
+        'gjs-navbar',
+        'gjs-component-countdown',
+        'gjs-style-bg',
+        'gjs-tooltip',
+        'gjs-tui-image-editor',
+        'gjs-custom-code',
+        'gjs-touch'
+      ]
+    });
+
+    editor.BlockManager.add('metabase-iframe', {
+      label: 'Dashboard Metabase',
+      content: `<iframe src="${metabaseIframeUrl}" width="100%" height="600" frameborder="0"></iframe>`,
+      category: 'Dashboards'
+        })// Obtener URLs guardadas desde Metabase y agregarlas como bloques
+    fetch('/Metabase/ObtenerUrlsGuardadas')
+      .then(res => res.json())
+      .then(urls => {
+        urls.forEach((url, index) => {
+          editor.BlockManager.add(`metabase-guardado-${index}`, {
+            label: `Metabase #${index + 1}`,
+            content: `<iframe src="${url}" width="100%" height="600" frameborder="0"></iframe>`,
+            category: 'Guardados Metabase'
+          });
+        });
+      })
+      .catch(err => console.error("Error cargando URLs guardadas:", err));
+    ;
+</script>
+<div id="guardarModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border:1px solid #ccc; z-index:9999">
+    <h3>Guardar plantilla</h3>
+
+    <div style="margin-bottom:10px;">
+        <label>Selecciona plantilla para sobrescribir:</label><br />
+        <select id="selectSobrescribir"></select>
+        <button id="btnSobrescribir">Sobrescribir</button>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Nombre para nueva plantilla:</label><br />
+        <input type="text" id="inputNombreNueva" />
+        <button id="btnCrearNueva">Crear nueva</button>
+    </div>
+
+    <button onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
+</div>
+
+<!-- Botón para descargar como PDF -->
+<button id="descargarPdfBtn">Descargar PDF de Plantilla</button>
+<script>
+    document.getElementById('descargarPdfBtn').addEventListener('click', function () {
+        var select = document.getElementById('plantillasSelect');
+        var nombre = select.value;
+        if (!nombre) {
+            alert("Selecciona una plantilla para descargar el PDF");
+            return;
+        }
+        window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
+    });
+</script>
+
+<button id="saveTemplateBtn">Guardar Plantilla</button>
+<script>
+    let plantillasDisponibles = [];
+
+    // Al hacer clic en "Guardar Plantilla", mostrar modal
+    document.getElementById('saveTemplateBtn').addEventListener('click', function () {
+        fetch('/Metabase/ObtenerPlantillas')
+            .then(res => res.json())
+            .then(data => {
+                plantillasDisponibles = data;
+                const select = document.getElementById('selectSobrescribir');
+                select.innerHTML = "";
+                data.forEach(nombre => {
+                    const option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('inputNombreNueva').value = '';
+                document.getElementById('guardarModal').style.display = 'block';
+            });
+    });
+
+    // Función para guardar plantilla
+    function guardarPlantilla(nombre) {
+        const html = editor.getHtml();
+        const css = editor.getCss();
+
+        fetch('/Metabase/GuardarPlantilla', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contenido: html, css: css, nombre: nombre })
+        }).then(res => {
+            if (res.ok) {
+                alert("Plantilla guardada como: " + nombre);
+                document.getElementById('guardarModal').style.display = 'none';
+                cargarListadoPlantillas(nombre); // refresca y selecciona
+            } else {
+                alert("Error al guardar");
+            }
+        });
+    }
+
+    // Botón Sobrescribir
+    document.getElementById('btnSobrescribir').addEventListener('click', function () {
+        const nombre = document.getElementById('selectSobrescribir').value;
+        if (!nombre) return alert("Selecciona una plantilla");
+        guardarPlantilla(nombre);
+    });
+
+    // Botón Crear nueva
+    document.getElementById('btnCrearNueva').addEventListener('click', function () {
+        let baseNombre = document.getElementById('inputNombreNueva').value.trim();
+        if (!baseNombre) return alert("Ingresa un nombre");
+
+        let nombreFinal = baseNombre;
+        let contador = 1;
+        while (plantillasDisponibles.includes(nombreFinal)) {
+            nombreFinal = `${baseNombre}_${contador}`;
+            contador++;
+        }
+
+        guardarPlantilla(nombreFinal);
+    });
+</script>
+
+
+<!-- Plantillas -->
+<label for="plantillasSelect">Plantillas guardadas:</label>
+<select id="plantillasSelect"></select>
+<button id="cargarPlantillaBtn">Cargar plantilla</button>
+
+<script>
+    // 1. Listar plantillas
+    function cargarListadoPlantillas(nombreSeleccionado = null) {
+        fetch('/Metabase/ObtenerPlantillas')
+            .then(res => res.json())
+            .then(plantillas => {
+                const select = document.getElementById('plantillasSelect');
+                select.innerHTML = "";
+                plantillas.forEach(nombre => {
+                    let option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    if (nombreSeleccionado && nombre === nombreSeleccionado) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            });
+    }
+
+    // Carga inicial al cargar la página
+    cargarListadoPlantillas();
+
+    // 2. Cargar plantilla en GrapesJS
+    document.getElementById('cargarPlantillaBtn').addEventListener('click', function () {
+        var select = document.getElementById('plantillasSelect');
+        var nombre = select.value;
+        if (!nombre) {
+            alert("Selecciona una plantilla");
+            return;
+        }
+        cargarPlantilla(nombre);
+    });
+        function cargarPlantilla(nombre) {
+        fetch('/Metabase/ObtenerPlantilla?nombre=' + encodeURIComponent(nombre))
+            .then(res => res.json())
+            .then(data => {
+                editor.setComponents(data.html);
+                editor.setStyle(data.css);
+            });
+    }
+</script>
