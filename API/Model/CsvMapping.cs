@@ -8,5 +8,6 @@
         public string AuxColumnName { get; set; }
         public DateTime CreatedAt { get; set; }
         public int IndexCsvColumn { get; set; }
+        public string delimiter { get; set; }
     }
 }

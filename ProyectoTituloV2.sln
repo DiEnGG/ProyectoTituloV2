@@ -10,7 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL Scripts", "SQL Scripts", "{B6647A3F-02E8-47D2-963B-DF19677A810E}"
 	ProjectSection(SolutionItems) = preProject
 		Scripts\Procedimientos SQL.sql = Scripts\Procedimientos SQL.sql
-		Scripts\Tablas SQL.sql = Scripts\Tablas SQL.sql
+		Scripts\Tablas SQL 2.sql = Scripts\Tablas SQL 2.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compose", "Compose", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"

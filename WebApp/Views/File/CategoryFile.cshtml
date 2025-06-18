@@ -1,9 +1,5 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model WebApp.Models.CategoryFile
 
-}
 
 <h2>
     Categoria de Archivos
@@ -11,9 +7,13 @@
 
 <hr/>
 
-<form action="analizar" method="post" enctype="multipart/form-data">
+<form asp-action="analizar" method="post" enctype="multipart/form-data">
     <label>Nombre Categoria</label>
-    <input type="text" name="category" id="category" />
+    <input asp-for="Nombre" type="text" name="Nombre" />
+    <label>Descripcion</label>
+    <input asp-for="Descripcion" type="text" name="Descripcion" placeholder="Opcional"/>
+    <label>Delimitador</label>
+    <input asp-for="delimiter" typeof="text" name="delimiter" />
     <input type="file" name="file" id="file"/>
     <button type="submit">Crear Categoria</button>
 </form>

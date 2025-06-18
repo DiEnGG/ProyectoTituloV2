@@ -29,7 +29,7 @@ namespace WebApp.Services
                 return "String";
         }
 
-        public static async Task<List<FileMapping>> getRecommendedFileMapping(IFormFile file, IConfiguration configuration) 
+        public static async Task<List<FileMapping>> getRecommendedFileMapping(IFormFile file, IConfiguration configuration, string delimiter = ",") 
         {
 
             var recommendations = new List<FileMapping>();
@@ -46,7 +46,7 @@ namespace WebApp.Services
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
-                Delimiter = ",",
+                Delimiter = delimiter,
                 Quote = '"',
                 TrimOptions = TrimOptions.Trim,
                 BadDataFound = null
