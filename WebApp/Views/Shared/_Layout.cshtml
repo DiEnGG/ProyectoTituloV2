@@ -1,133 +1,171 @@
-﻿<!DOCTYPE html>
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <title>@ViewData["Title"] AUTOREPORT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WebApp</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/WebApp.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
+
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WebApp</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-
-                        <!-- Agrupación en dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="archivosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Archivos
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="archivosDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="File" asp-action="Upload">Subir Archivo</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="File" asp-action="Category">Categoria Archivo</a>
-                                </li>
-                            </ul>
-                        </li>
-
-
-                        <!-- Agrupación en dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="UsuariosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Usuarios
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="UsuariosDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Usuarios" asp-action="Index">Listado</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Usuarios" asp-action="Create">Crear</a>
-                                </li>
-                            </ul>
-                        </li>
-
-
-                        <!-- Agrupación en dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="EmpresasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Empresas
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="EmpresasDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Empresas" asp-action="Index">Listado</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Empresas" asp-action="Create">Crear</a>
-                                </li>
-                            </ul>
-                        </li>
-
-
-                        <!-- Agrupación en dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="RolesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Roles
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="RolesDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Index">Listado</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Create">Crear</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="archivosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Archivos
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="Metabase vista">
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="Editor">Editar informe</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="VistaIframe">Agregar y ver iframe metabase</a>
-                                </li>
-                            </ul>
-                        </li>
-
-
-                        <form asp-action="Logout" asp-controller="Login" method="post" class="form-inline">
-                            <button type="submit" class="btn btn-link">Cerrar sesión</button>
-                        </form>
-
-                        @await Component.InvokeAsync("EmpresasDropdown")
-                    </ul>
-                </div>
+    <div class="layout-wrapper">
+        <nav class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <a href="/">
+                    <img src="~/img/logo-autoreport.png" alt="Logo AutoReport" class="logo-img" />
+                </a>
             </div>
+            <!-- Archivos -->
+            <div class="sidebar-group">
+                <a class="nav-link has-submenu" onclick="toggleSubmenu('archivosSub')">
+                    <i class="fas fa-folder"></i> <span class="label">Archivos</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu" id="archivosSub">
+                    <li><a asp-controller="File" asp-action="Upload">Subir Archivo</a></li>
+                    <li><a asp-controller="File" asp-action="Category">Categoría Archivo</a></li>
+                </ul>
+            </div>
+            <!-- Usuarios -->
+            <div class="sidebar-group">
+                <a class="nav-link has-submenu" onclick="toggleSubmenu('usuariosSub')">
+                    <i class="fas fa-users"></i> <span class="label">Usuarios</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu" id="usuariosSub">
+                    <li><a asp-controller="Usuarios" asp-action="Index">Listado</a></li>
+                    <li><a asp-controller="Usuarios" asp-action="Create">Crear</a></li>
+                </ul>
+            </div>
+            <!-- Empresas -->
+            <div class="sidebar-group">
+                <a class="nav-link has-submenu" onclick="toggleSubmenu('empresasSub')">
+                    <i class="fas fa-building"></i> <span class="label">Empresas</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu" id="empresasSub">
+                    <li><a asp-controller="Empresas" asp-action="Index">Listado</a></li>
+                    <li><a asp-controller="Empresas" asp-action="Create">Crear</a></li>
+                </ul>
+            </div>
+            <!-- Roles -->
+            <div class="sidebar-group">
+                <a class="nav-link has-submenu" onclick="toggleSubmenu('rolesSub')">
+                    <i class="fas fa-user-shield"></i> <span class="label">Roles</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu" id="rolesSub">
+                    <li><a asp-controller="Roles" asp-action="Index">Listado</a></li>
+                    <li><a asp-controller="Roles" asp-action="Create">Crear</a></li>
+                </ul>
+            </div>
+            <form asp-action="Logout" asp-controller="Login" method="post" class="logout-form">
+                <button class="btn-logout" type="submit">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="label">Cerrar sesión</span>
+                </button>
+            </form>
+            <!-- Agrupación en dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-dark" href="#" id="RolesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Roles
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="RolesDropdown">
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Index">Listado</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Roles" asp-action="Create">Crear</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-dark" href="#" id="archivosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Archivos
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="Metabase vista">
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="Editor">Editar informe</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="VistaIframe">Agregar y ver iframe metabase</a>
+                        </li>
+                    </ul>
+                </li>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+        <div class="main-area">
+            <header class="topbar">
+                <button class="toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Buscar..." /></div>
+                <div class="top-icons">
+                    <button id="toggleThemeBtn" class="btn toggle-theme">
+                        <span id="themeIcon">🌙</span>
+                        <span id="themeText">Modo Oscuro</span>
+                    </button>
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>@User.Identity.Name</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                @RenderBody()
+            </main>
+            <footer class="footer">
+                <span>&copy; 2025 AutoReport. Todos los derechos reservados.</span>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - WebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+        function toggleSubmenu(id) {
+            const group = document.getElementById(id).parentElement;
+            group.classList.toggle('open');
+        }
+    </script>
+    <script>
+    const toggleBtn = document.getElementById('toggleThemeBtn');
+    const html = document.documentElement;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    // Cargar el tema guardado
+    const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+    html.classList.add(savedTheme);
+    updateButton(savedTheme);
+
+
+    toggleBtn.addEventListener('click', () => {
+        const newTheme = html.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+        html.classList.remove('dark-mode', 'light-mode');
+        html.classList.add(newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateButton(newTheme);
+    });
+
+    function updateButton(theme) {
+        if (theme === 'dark-mode') {
+            themeIcon.textContent = '🌙';
+            themeText.textContent = 'Modo Oscuro';
+        } else {
+            themeIcon.textContent = '☀️';
+            themeText.textContent = 'Modo Claro';
+        }
+    }
+</script>
+
 </body>
 </html>
+
+

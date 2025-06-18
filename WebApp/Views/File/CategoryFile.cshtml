@@ -1,21 +1,27 @@
-﻿@model WebApp.Models.CategoryFile
 
+@model WebApp.Models.CategoryFile
 
-<h2>
-    Categoria de Archivos
-</h2>
+<div class="centered-wrapper">
+    <form asp-action="analizar" method="post" enctype="multipart/form-data" class="minimal-form">
+        <h2 class="minimal-title">Categoría de Archivos</h2>
 
-<hr/>
+        <label>Nombre Categoria
+          <input asp-for="Nombre" type="text" name="Nombre" />
+        </label>
+        <label>Descripcion
+          <input asp-for="Descripcion" type="text" name="Descripcion" placeholder="Opcional"/>
+        </label>
+        <label>Delimitador
+          <input asp-for="delimiter" typeof="text" name="delimiter" />
+        </label>
+        <label>
+            Archivo CSV
+            <input type="file" name="file" id="file" />
+        </label>
 
-<form asp-action="analizar" method="post" enctype="multipart/form-data">
-    <label>Nombre Categoria</label>
-    <input asp-for="Nombre" type="text" name="Nombre" />
-    <label>Descripcion</label>
-    <input asp-for="Descripcion" type="text" name="Descripcion" placeholder="Opcional"/>
-    <label>Delimitador</label>
-    <input asp-for="delimiter" typeof="text" name="delimiter" />
-    <input type="file" name="file" id="file"/>
-    <button type="submit">Crear Categoria</button>
-</form>
+        <button type="submit">Crear Categoría</button>
+    </form>
+</div>
+
 
 

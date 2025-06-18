@@ -1,24 +1,32 @@
 ﻿@model List<Empresa>
 
-<h2>Empresas</h2>
-<a asp-action="Create" class="btn btn-primary">Nueva Empresa</a>
+<h2 class="minimal-title">Empresas</h2>
 
-<table class="table">
-    <thead>
-        <tr><th>Nombre</th><th>Razón Social</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var e in Model)
-        {
+<a asp-action="Create" class="btn-add">Nueva Empresa</a>
+
+<div class="table-wrapper">
+    <table class="minimal-table">
+        <thead>
             <tr>
-                <td>@e.Nombre</td>
-                <td>@e.RazonSocial</td>
-                <td>@(e.Activo ? "Sí" : "No")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@e.EmpresaId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@e.EmpresaId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
+                <th>Nombre</th>
+                <th>Razón Social</th>
+                <th>Activo</th>
+                <th>Acciones</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var e in Model)
+            {
+                <tr class="estado-fila @(e.Activo ? "si" : "no")">
+                    <td>@e.Nombre</td>
+                    <td>@e.RazonSocial</td>
+                    <td>@(e.Activo ? "Sí" : "No")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@e.EmpresaId" class="btn-action">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@e.EmpresaId" class="btn-action danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

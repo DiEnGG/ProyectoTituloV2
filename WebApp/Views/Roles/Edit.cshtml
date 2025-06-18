@@ -1,19 +1,21 @@
 ﻿@model Rol
 
-<h2>@ViewData["Title"]</h2>
+<div class="centered-wrapper">
+    <form asp-action="Edit" method="post" class="big-form">
+        <h2 class="minimal-title">Editar Rol</h2>
+        <input type="hidden" asp-for="RolId" />
 
-<form asp-action="Edit">
-    <input type="hidden" asp-for="RolId" />
-    <div class="mb-3">
-        <label asp-for="Nombre" class="form-label"></label>
-        <input asp-for="Nombre" class="form-control" />
-        <span asp-validation-for="Nombre" class="text-danger"></span>
-    </div>
+        <label>
+            Nombre del Rol
+            <input asp-for="Nombre" type="text" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </label>
 
-    <div class="form-check">
-        <input asp-for="Activo" class="form-check-input" />
-        <label asp-for="Activo" class="form-check-label">Activo</label>
-    </div>
+        <label class="checkbox-label">
+            <input asp-for="Activo" type="checkbox" />
+            Activo
+        </label>
 
-    <button type="submit" class="btn btn-success">Guardar</button>
-</form>
+        <button type="submit">Guardar</button>
+    </form>
+</div>

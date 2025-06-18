@@ -26,12 +26,15 @@ namespace WebApp.Controllers
             if (!User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
-            
-            // Obtener la URL desde appsettings.json
             string apiUrl = _configuration.GetValue<string>("endpoint_api:url");
-
-            // Pasar la URL al frontend a través de ViewData
             ViewData["ApiUrl"] = apiUrl;
+
+            // Nombre
+            ViewBag.NombreUsuario = User.Identity.Name;
+
+            // Rol (si tienes roles en Claims)
+            var rolClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role);
+            ViewBag.RolUsuario = rolClaim?.Value ?? "Usuario";
 
             return View();
         }
