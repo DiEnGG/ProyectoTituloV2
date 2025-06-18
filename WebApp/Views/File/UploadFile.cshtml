@@ -1,20 +1,15 @@
 @{
     ViewData["Title"] = "Subir Archivo";
+    var categorias = ViewBag.Categorias as List<CategoryResponse>;
 }
 
 <div class="centered-wrapper">
-    <form class="minimal-form" onsubmit="event.preventDefault(); procesarCsv();">
+    <form class="minimal-form big-form" onsubmit="event.preventDefault(); procesarCsv();">
         <h2 class="minimal-title">Subir Archivo</h2>
 
         <label>
             Categoría
-            <select name="CategoriaId" class="form-control" id="category">
-                <option value="">Seleccione una categoría</option>
-                @foreach (var categoria in ViewBag.Categorias)
-                {
-                    <option value="@categoria.CategoriaId">@categoria.Nombre</option>
-                }
-            </select>
+            <select name="CategoriaId" id="category" asp-items="@(new SelectList(categorias, "CategoriaId", "Nombre"))"></select>
         </label>
 
         <label>
