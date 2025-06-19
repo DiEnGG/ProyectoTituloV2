@@ -1,9 +1,60 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Catálogo de Plantillas";
+    var plantillas = new[] {
+        new { Nombre = "Hola", Titulo = "Plantilla Hola" },
+        new { Nombre = "ITSEC", Titulo = "Plantilla ITSEC" },
+        new { Nombre = "nose", Titulo = "Plantilla Nose" },
+        new { Nombre = "prueba", Titulo = "Plantilla Prueba" }
+    };
 }
 
-
-<div class="text-center">
-    <h1 class="display-4">Bienvenido</h1>
-    <p class="welcome-msg">Hola, @ViewBag.NombreUsuario (@ViewBag.RolUsuario) 👋</p>
+<h2>Catálogo de Plantillas Empresa ITSEC</h2>
+<div class="main-wrapper">
+    <div class="catalogo">
+        @foreach (var p in plantillas)
+        {
+            <div class="plantilla-card">
+                <h4>@p.Titulo</h4>
+                <div class="miniatura-preview" data-htmlurl="@Url.Content($"~/Plantillas/{p.Nombre}.html")">
+                    <div class="miniatura-loading">Cargando vista previa...</div>
+                </div>
+                <p>
+                    <a asp-controller="Metabase"
+                       asp-action="Editor"
+                       asp-route-nombre="@p.Nombre"
+                       class="btn-add">
+                        🛠️ Editar Plantilla
+                    </a>
+                </p>
+            </div>
+        }
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.miniatura-preview').forEach(function (div) {
+            const url = div.getAttribute('data-htmlurl');
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    // Crea un contenedor interno con el HTML cargado
+                    const inner = document.createElement('div');
+                    inner.className = 'miniatura-html-content';
+                    inner.innerHTML = html;
+                    div.innerHTML = '';
+                    div.appendChild(inner);
+                })
+                .catch(err => {
+                    div.innerHTML = '<div style="color:#ff6b6b;">No se pudo cargar la vista previa.</div>';
+                });
+        });
+    });
+</script>
+
+
+
+
+
+
+

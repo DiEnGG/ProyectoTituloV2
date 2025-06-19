@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\Plantillas\Hola.css" />
+    <Content Remove="wwwroot\Plantillas\Hola.html" />
+    <Content Remove="wwwroot\Plantillas\ITSEC.css" />
+    <Content Remove="wwwroot\Plantillas\ITSEC.html" />
+    <Content Remove="wwwroot\Plantillas\nose.css" />
+    <Content Remove="wwwroot\Plantillas\nose.html" />
+    <Content Remove="wwwroot\Plantillas\prueba.css" />
+    <Content Remove="wwwroot\Plantillas\prueba.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
@@ -20,6 +31,17 @@
 
   <ItemGroup>
     <Folder Include="Plantillas\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Plantillas\Hola.css" />
+    <None Include="wwwroot\Plantillas\Hola.html" />
+    <None Include="wwwroot\Plantillas\ITSEC.css" />
+    <None Include="wwwroot\Plantillas\ITSEC.html" />
+    <None Include="wwwroot\Plantillas\nose.css" />
+    <None Include="wwwroot\Plantillas\nose.html" />
+    <None Include="wwwroot\Plantillas\prueba.css" />
+    <None Include="wwwroot\Plantillas\prueba.html" />
   </ItemGroup>
 
 </Project>
