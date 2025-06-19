@@ -19,6 +19,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ActualizarRol`(
     IN p_RolId INT,
@@ -38,6 +39,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ActualizarUsuario`(
     IN p_UsuarioId INT,
@@ -65,6 +67,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_CrearEmpresa`(
     IN p_Nombre VARCHAR(100),
@@ -81,6 +84,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_CrearRol`(
     IN p_Nombre VARCHAR(50),
@@ -96,6 +100,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_CrearUsuario`(
     IN p_Nombre VARCHAR(100),
@@ -116,6 +121,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_DesactivarEmpresa`(
     IN p_EmpresaId INT,
@@ -125,6 +131,7 @@ BEGIN
 	UPDATE Empresas SET Activo = p_Activar WHERE EmpresaId = p_EmpresaId;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_DesactivarRol`(
     IN p_RolId INT,
@@ -134,6 +141,7 @@ BEGIN
     UPDATE Roles SET Activo = p_Activar WHERE RolId = p_RolId;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_DesactivarUsuario`(
     IN p_UsuarioId INT,
@@ -145,49 +153,108 @@ BEGIN
    
 END$$
 DELIMITER ;
+
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_generateCsvView`(
-IN fileNameParam VARCHAR(100)
-)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GenerarVistaPorCategoria`(IN categoriaNombre text)
 BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE csvColumn VARCHAR(100);
-    DECLARE auxColumn VARCHAR(100);
-    DECLARE columnList TEXT DEFAULT '';
+	 -- Variables
+    DECLARE done INT DEFAULT 0;
+    DECLARE colCsv VARCHAR(100);
+    DECLARE colAux VARCHAR(100);
+    DECLARE selectList TEXT DEFAULT '';
+    DECLARE catId INT;
+    DECLARE table_schema_name VARCHAR(100);
 
-
+    -- Cursor (debe ir después de variables)
     DECLARE cur CURSOR FOR 
-    SELECT CsvColumnName, AuxColumnName 
-    FROM CsvMapping 
-    WHERE FileName = fileNameParam;
+        SELECT CsvColumnName, AuxColumnName
+        FROM tmp_columnas_validas;
 
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    -- Handler (debe ir después del cursor)
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    
+    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
 
+    -- Determinar el esquema actual
+    SET table_schema_name = DATABASE();
+
+    -- Obtener ID de categoría
+    SELECT CategoriaId INTO catId 
+    FROM categoriasarchivo 
+    WHERE Nombre = categoriaNombre 
+    LIMIT 1;
+
+    IF catId IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Categoría no encontrada';
+    END IF;
+
+    -- Crear tabla temporal para columnas válidas
+    CREATE TEMPORARY TABLE tmp_columnas_validas (
+        CsvColumnName VARCHAR(100),
+        AuxColumnName VARCHAR(100)
+    );
+
+    -- Insertar solo columnas mapeadas que sí existen en la tabla datos
+    INSERT INTO tmp_columnas_validas (CsvColumnName, AuxColumnName)
+    SELECT am.CsvColumnName, am.AuxColumnName
+    FROM archivosmapping am
+    WHERE am.CategoriaId = catId
+      AND EXISTS (
+        SELECT 1
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        WHERE c.TABLE_NAME = 'datos'
+          AND c.TABLE_SCHEMA = table_schema_name
+          AND c.COLUMN_NAME = am.AuxColumnName
+      );
+
+    -- Usar el cursor para construir el SELECT dinámico
     OPEN cur;
 
-    column_loop: LOOP
-        FETCH cur INTO csvColumn, auxColumn;
+    read_loop: LOOP
+        FETCH cur INTO colCsv, colAux;
         IF done THEN
-            LEAVE column_loop;
+            LEAVE read_loop;
         END IF;
 
-        -- Concatenar cada columna al query dinámico
-        SET columnList = CONCAT(columnList, 
-            IF(LENGTH(columnList) = 0, '', ', '), 
-            auxColumn, ' AS `', csvColumn, '`');
+        -- SET selectList = CONCAT_WS(', ', selectList, CONCAT('datos.`', colAux, '` AS `', colCsv, '`'));
+        IF selectList = '' THEN
+			SET selectList = CONCAT('datos.`', colAux, '` AS `', colCsv, '`');
+		ELSE
+			SET selectList = CONCAT(selectList, ', datos.`', colAux, '` AS `', colCsv, '`');
+		END IF;
     END LOOP;
 
     CLOSE cur;
 
-    -- Crear la vista dinámica
-    SET @sql = CONCAT('CREATE OR REPLACE VIEW vw_',SUBSTRING_INDEX(fileNameParam, '.', 1),' AS SELECT ', columnList, ' FROM CsvData WHERE FileName = ''', fileNameParam, ''';');
+    -- Validación final
+    IF selectList IS NULL OR selectList = '' THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'No hay columnas válidas para construir la vista.';
+    END IF;
 
-    -- Ejecutar el SQL dinámico
+    -- Armar SQL dinámico
+    SET @sql = CONCAT(
+        'CREATE OR REPLACE VIEW vista_', REPLACE(categoriaNombre, ' ', '_'), ' AS ',
+        'SELECT ', selectList, ',
+                datos.ArchivoId,
+                archivos.NombreOriginal,
+                categoriasarchivo.Nombre AS CategoriaNombre ',
+        'FROM datos ',
+        'INNER JOIN archivos ON archivos.ArchivoId = datos.ArchivoId ',
+        'INNER JOIN categoriasarchivo ON categoriasarchivo.CategoriaId = archivos.CategoriaId ',
+        'WHERE categoriasarchivo.Nombre = \'', categoriaNombre, '\''
+    );
+
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
+
+    -- Limpiar tabla temporal
+    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getFileMapping`(IN p_CategoryId int)
 BEGIN
@@ -203,12 +270,19 @@ BEGIN
     having A.CreatedAt = max(A.CreatedAt);
 END$$
 DELIMITER ;
+
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GetUploadedFiles`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_InsertarLog`(
+	IN p_UsuarioId INT,
+    IN p_EmpresaId INT,
+    IN p_Accion VARCHAR(100),
+    IN p_Detalle TEXT)
 BEGIN
-    SELECT FileName, UploadDate FROM UploadedFiles ORDER BY UploadDate DESC;
+	INSERT INTO logs (UsuarioId, EmpresaId, Accion, Detalle)
+    VALUES (p_UsuarioId, p_EmpresaId, p_Accion, p_Detalle);
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertFileCategory`(IN userId int, IN filename VARCHAR(255),IN fileDesc VARCHAR(255),IN fileDelimiter VARCHAR(10), IN data JSON)
 BEGIN
@@ -254,12 +328,13 @@ BEGIN
 		SET i = i + 1; -- Avanzar al siguiente registro
     END WHILE;
     
+    CALL sp_InsertarLog(userId, empIdEncontrada, 'Generar Categoria', concat('El usuario creó la categoría ', filename, '.'));
+    
+    CALL sp_GenerarVistaPorCategoria(filename);
 END$$
 DELIMITER ;
 
-SELECT * FROM proyectotitulo.archivosmapping;
-
-select * from datosDELIMITER $$
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertFileData`(IN p_categoryId int, IN data JSON)
 BEGIN
     DECLARE i INT DEFAULT 0;
@@ -355,6 +430,7 @@ BEGIN
     WHERE (EmpId IS NULL OR A.EmpresaId = EmpId);
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarEmpresas`(
     IN p_EmpresaId VARCHAR(100)
@@ -364,6 +440,7 @@ BEGIN
     WHERE (p_EmpresaId IS NULL OR EmpresaId = p_EmpresaId);
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarRoles`(
     IN p_RolId VARCHAR(50)
@@ -373,6 +450,7 @@ BEGIN
     WHERE (p_RolId IS NULL OR RolId = p_RolId);
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarUsuarios`(
 	IN p_UsuarioId INT,
@@ -402,6 +480,7 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarView`(
 IN pview_name VARCHAR(100)
@@ -416,6 +495,7 @@ BEGIN
     DEALLOCATE PREPARE stmt;
 END$$
 DELIMITER ;
+
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_LoginUsuario`(
     IN p_Email VARCHAR(255),
@@ -444,19 +524,5 @@ BEGIN
     FROM Usuarios
     WHERE Email = p_Email
     LIMIT 1;
-END$$
-DELIMITER ;
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_SaveRecord`(IN Name VARCHAR(100), IN Age INT)
-BEGIN
-    INSERT INTO Records (Name, Age)
-    VALUES (Name, Age);
-END$$
-DELIMITER ;
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_SaveUploadedFile`(IN FileName VARCHAR(255), IN UploadDate DATETIME)
-BEGIN
-    INSERT INTO UploadedFiles (FileName, UploadDate)
-    VALUES (FileName, UploadDate);
 END$$
 DELIMITER ;
