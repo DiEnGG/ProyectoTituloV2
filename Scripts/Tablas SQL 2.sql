@@ -13,7 +13,7 @@ CREATE TABLE `archivos` (
   CONSTRAINT `archivos_ibfk_1` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`),
   CONSTRAINT `archivos_ibfk_2` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`),
   CONSTRAINT `archivos_ibfk_3` FOREIGN KEY (`CategoriaId`) REFERENCES `categoriasarchivo` (`CategoriaId`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `archivosmapping` (
   `MappingId` int NOT NULL AUTO_INCREMENT,
@@ -25,7 +25,7 @@ CREATE TABLE `archivosmapping` (
   PRIMARY KEY (`MappingId`),
   KEY `CategoriaId` (`CategoriaId`),
   CONSTRAINT `archivosmapping_ibfk_1` FOREIGN KEY (`CategoriaId`) REFERENCES `categoriasarchivo` (`CategoriaId`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `categoriasarchivo` (
   `CategoriaId` int NOT NULL AUTO_INCREMENT,
@@ -41,7 +41,7 @@ CREATE TABLE `categoriasarchivo` (
   KEY `UsuarioId` (`UsuarioId`),
   CONSTRAINT `categoriasarchivo_ibfk_1` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`),
   CONSTRAINT `categoriasarchivo_ibfk_2` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `datos` (
   `DatoId` int NOT NULL AUTO_INCREMENT,
@@ -61,11 +61,40 @@ CREATE TABLE `datos` (
   `AuxDateTime3` datetime DEFAULT NULL,
   `AuxDateTime4` datetime DEFAULT NULL,
   `AuxDateTime5` datetime DEFAULT NULL,
+  `AuxString6` text,
+  `AuxString7` text,
+  `AuxString8` text,
+  `AuxString9` text,
+  `AuxString10` text,
+  `AuxString11` text,
+  `AuxString12` text,
+  `AuxString13` text,
+  `AuxString14` text,
+  `AuxString15` text,
+  `AuxDecimal6` text,
+  `AuxDecimal7` text,
+  `AuxDecimal8` text,
+  `AuxDecimal9` text,
+  `AuxDecimal10` text,
+  `AuxDecimal11` text,
+  `AuxDecimal12` text,
+  `AuxDecimal13` text,
+  `AuxDecimal14` text,
+  `AuxDecimal15` text,
+  `AuxDateTime6` text,
+  `AuxDateTime7` text,
+  `AuxDateTime8` text,
+  `AuxDateTime9` text,
+  `AuxDateTime10` text,
+  `AuxDateTime11` text,
+  `AuxDateTime12` text,
+  `AuxDateTime13` text,
+  `AuxDateTime14` text,
+  `AuxDateTime15` text,
   PRIMARY KEY (`DatoId`),
   KEY `ArchivoId` (`ArchivoId`),
   CONSTRAINT `datos_ibfk_1` FOREIGN KEY (`ArchivoId`) REFERENCES `archivos` (`ArchivoId`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `empresas` (
   `EmpresaId` int NOT NULL AUTO_INCREMENT,
