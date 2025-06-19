@@ -58,42 +58,89 @@ public class MetabaseController : Controller
         return handler.WriteToken(secToken);
     }
 
-
+    public class GuardarPlantillaDto
+    {
+        public string Nombre { get; set; }
+        public string Contenido { get; set; }
+        public string Css { get; set; }
+        public string ImagenBase64 { get; set; } // <-- NUEVO
+    }
 
     [HttpPost]
     public IActionResult GuardarPlantilla([FromBody] GuardarPlantillaDto data)
     {
-        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "Plantillas");
+        if (data == null || string.IsNullOrWhiteSpace(data.Nombre) || string.IsNullOrWhiteSpace(data.Contenido))
+            return BadRequest(new { mensaje = "Faltan datos requeridos." });
+
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
         if (!Directory.Exists(carpeta))
             Directory.CreateDirectory(carpeta);
 
         var safeName = string.Join("_", data.Nombre.Split(Path.GetInvalidFileNameChars()));
+        if (string.IsNullOrWhiteSpace(safeName))
+            return BadRequest(new { mensaje = "El nombre de plantilla es inválido." });
 
-        // Guarda HTML
-        System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".html"), data.Contenido);
+        try
+        {
+            // Guarda HTML
+            System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".html"), data.Contenido);
 
-        // Guarda CSS
-        System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".css"), data.Css);
+            // Guarda CSS
+            System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".css"), data.Css ?? "");
 
-        return Ok();
+            // Guarda la imagen (thumbnail)
+            if (!string.IsNullOrEmpty(data.ImagenBase64))
+            {
+                // Quita el encabezado de dataURL si existe
+                var base64Data = data.ImagenBase64.Contains(",") ? data.ImagenBase64.Split(',')[1] : data.ImagenBase64;
+                var bytes = Convert.FromBase64String(base64Data);
+                System.IO.File.WriteAllBytes(Path.Combine(carpeta, safeName + ".png"), bytes);
+            }
+
+            return Ok(new { mensaje = "Plantilla guardada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al guardar la plantilla.", detalle = ex.Message });
+        }
     }
 
-    public class GuardarPlantillaDto
-    {
-        public string Contenido { get; set; }
-        public string Css { get; set; }
-        public string Nombre { get; set; }
-    }
+    //[HttpPost]
+    //public IActionResult GuardarPlantilla([FromBody] GuardarPlantillaDto data)
+    //{
+    //    var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
+    //    if (!Directory.Exists(carpeta))
+    //        Directory.CreateDirectory(carpeta);
+
+    //    var safeName = string.Join("_", data.Nombre.Split(Path.GetInvalidFileNameChars()));
+
+    //    // Guarda HTML
+    //    System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".html"), data.Contenido);
+
+    //    // Guarda CSS
+    //    System.IO.File.WriteAllText(Path.Combine(carpeta, safeName + ".css"), data.Css);
+
+    //    return Ok();
+    //}
+
+    //public class GuardarPlantillaDto
+    //{
+    //    public string Contenido { get; set; }
+    //    public string Css { get; set; }
+    //    public string Nombre { get; set; }
+    //}
     public IActionResult ObtenerPlantillas()
     {
-        var archivos = Directory.GetFiles("Plantillas/", "*.html")
-            .Select(x => Path.GetFileNameWithoutExtension(x));
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
+        var archivos = Directory.GetFiles(carpeta, "*.html")
+            .Select(x => Path.GetFileNameWithoutExtension(x))
+            .ToList();
         return Json(archivos);
     }
 
     public IActionResult ObtenerPlantilla(string nombre)
     {
-        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "Plantillas");
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
         var safeName = string.Join("_", nombre.Split(Path.GetInvalidFileNameChars()));
         var html = System.IO.File.ReadAllText(Path.Combine(carpeta, safeName + ".html"));
         var css = System.IO.File.ReadAllText(Path.Combine(carpeta, safeName + ".css"));
@@ -104,7 +151,7 @@ public class MetabaseController : Controller
 
     public async Task<IActionResult> DescargarPdf(string nombre)
     {
-        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "Plantillas");
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
         var safeName = string.Join("_", nombre.Split(Path.GetInvalidFileNameChars()));
         var htmlPath = Path.Combine(carpeta, safeName + ".html");
         var cssPath = Path.Combine(carpeta, safeName + ".css");
@@ -147,7 +194,7 @@ public class MetabaseController : Controller
     [HttpGet]
     public IActionResult ExistePlantilla(string nombre)
     {
-        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "Plantillas");
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
         var safeName = string.Join("_", nombre.Split(Path.GetInvalidFileNameChars()));
 
         var htmlPath = Path.Combine(carpeta, safeName + ".html");
