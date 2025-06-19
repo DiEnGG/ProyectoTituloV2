@@ -1,105 +1,4 @@
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GenerarVistaPorCategoria`(IN categoriaNombre text)
-BEGIN
-	 -- Variables
-    DECLARE done INT DEFAULT 0;
-    DECLARE colCsv VARCHAR(100);
-    DECLARE colAux VARCHAR(100);
-    DECLARE selectList TEXT DEFAULT '';
-    DECLARE catId INT;
-    DECLARE table_schema_name VARCHAR(100);
-
-    -- Cursor (debe ir después de variables)
-    DECLARE cur CURSOR FOR 
-        SELECT CsvColumnName, AuxColumnName
-        FROM tmp_columnas_validas;
-
-    -- Handler (debe ir después del cursor)
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-    
-    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
-
-    -- Determinar el esquema actual
-    SET table_schema_name = DATABASE();
-
-    -- Obtener ID de categoría
-    SELECT CategoriaId INTO catId 
-    FROM categoriasarchivo 
-    WHERE Nombre = categoriaNombre 
-    LIMIT 1;
-
-    IF catId IS NULL THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Categoría no encontrada';
-    END IF;
-
-    -- Crear tabla temporal para columnas válidas
-    CREATE TEMPORARY TABLE tmp_columnas_validas (
-        CsvColumnName VARCHAR(100),
-        AuxColumnName VARCHAR(100)
-    );
-
-    -- Insertar solo columnas mapeadas que sí existen en la tabla datos
-    INSERT INTO tmp_columnas_validas (CsvColumnName, AuxColumnName)
-    SELECT am.CsvColumnName, am.AuxColumnName
-    FROM archivosmapping am
-    WHERE am.CategoriaId = catId
-      AND EXISTS (
-        SELECT 1
-        FROM INFORMATION_SCHEMA.COLUMNS c
-        WHERE c.TABLE_NAME = 'datos'
-          AND c.TABLE_SCHEMA = table_schema_name
-          AND c.COLUMN_NAME = am.AuxColumnName
-      );
-
-    -- Usar el cursor para construir el SELECT dinámico
-    OPEN cur;
-
-    read_loop: LOOP
-        FETCH cur INTO colCsv, colAux;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-
-        -- SET selectList = CONCAT_WS(', ', selectList, CONCAT('datos.`', colAux, '` AS `', colCsv, '`'));
-        IF selectList = '' THEN
-			SET selectList = CONCAT('datos.`', colAux, '` AS `', colCsv, '`');
-		ELSE
-			SET selectList = CONCAT(selectList, ', datos.`', colAux, '` AS `', colCsv, '`');
-		END IF;
-    END LOOP;
-
-    CLOSE cur;
-
-    -- Validación final
-    IF selectList IS NULL OR selectList = '' THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'No hay columnas válidas para construir la vista.';
-    END IF;
-
-    -- Armar SQL dinámico
-    SET @sql = CONCAT(
-        'CREATE OR REPLACE VIEW vista_', REPLACE(categoriaNombre, ' ', '_'), ' AS ',
-        'SELECT ', selectList, ',
-                datos.ArchivoId,
-                archivos.NombreOriginal,
-                categoriasarchivo.Nombre AS CategoriaNombre ',
-        'FROM datos ',
-        'INNER JOIN archivos ON archivos.ArchivoId = datos.ArchivoId ',
-        'INNER JOIN categoriasarchivo ON categoriasarchivo.CategoriaId = archivos.CategoriaId ',
-        'WHERE categoriasarchivo.Nombre = \'', categoriaNombre, '\''
-    );
-
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-
-    -- Limpiar tabla temporal
-    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
-END$$
-DELIMITER ;
-
-DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ActualizarEmpresa`(
     IN p_EmpresaId INT,
     IN p_Nombre VARCHAR(100),
@@ -256,6 +155,107 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GenerarVistaPorCategoria`(IN categoriaNombre text)
+BEGIN
+	 -- Variables
+    DECLARE done INT DEFAULT 0;
+    DECLARE colCsv VARCHAR(100);
+    DECLARE colAux VARCHAR(100);
+    DECLARE selectList TEXT DEFAULT '';
+    DECLARE catId INT;
+    DECLARE table_schema_name VARCHAR(100);
+
+    -- Cursor (debe ir después de variables)
+    DECLARE cur CURSOR FOR 
+        SELECT CsvColumnName, AuxColumnName
+        FROM tmp_columnas_validas;
+
+    -- Handler (debe ir después del cursor)
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    
+    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
+
+    -- Determinar el esquema actual
+    SET table_schema_name = DATABASE();
+
+    -- Obtener ID de categoría
+    SELECT CategoriaId INTO catId 
+    FROM categoriasarchivo 
+    WHERE Nombre = categoriaNombre 
+    LIMIT 1;
+
+    IF catId IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Categoría no encontrada';
+    END IF;
+
+    -- Crear tabla temporal para columnas válidas
+    CREATE TEMPORARY TABLE tmp_columnas_validas (
+        CsvColumnName VARCHAR(100),
+        AuxColumnName VARCHAR(100)
+    );
+
+    -- Insertar solo columnas mapeadas que sí existen en la tabla datos
+    INSERT INTO tmp_columnas_validas (CsvColumnName, AuxColumnName)
+    SELECT am.CsvColumnName, am.AuxColumnName
+    FROM archivosmapping am
+    WHERE am.CategoriaId = catId
+      AND EXISTS (
+        SELECT 1
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        WHERE c.TABLE_NAME = 'datos'
+          AND c.TABLE_SCHEMA = table_schema_name
+          AND c.COLUMN_NAME = am.AuxColumnName
+      );
+
+    -- Usar el cursor para construir el SELECT dinámico
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO colCsv, colAux;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- SET selectList = CONCAT_WS(', ', selectList, CONCAT('datos.`', colAux, '` AS `', colCsv, '`'));
+        IF selectList = '' THEN
+			SET selectList = CONCAT('datos.`', colAux, '` AS `', colCsv, '`');
+		ELSE
+			SET selectList = CONCAT(selectList, ', datos.`', colAux, '` AS `', colCsv, '`');
+		END IF;
+    END LOOP;
+
+    CLOSE cur;
+
+    -- Validación final
+    IF selectList IS NULL OR selectList = '' THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'No hay columnas válidas para construir la vista.';
+    END IF;
+
+    -- Armar SQL dinámico
+    SET @sql = CONCAT(
+        'CREATE OR REPLACE VIEW vista_', REPLACE(categoriaNombre, ' ', '_'), ' AS ',
+        'SELECT ', selectList, ',
+                datos.ArchivoId,
+                archivos.NombreOriginal,
+                categoriasarchivo.Nombre AS CategoriaNombre ',
+        'FROM datos ',
+        'INNER JOIN archivos ON archivos.ArchivoId = datos.ArchivoId ',
+        'INNER JOIN categoriasarchivo ON categoriasarchivo.CategoriaId = archivos.CategoriaId ',
+        'WHERE categoriasarchivo.Nombre = \'', categoriaNombre, '\''
+    );
+
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    -- Limpiar tabla temporal
+    DROP TEMPORARY TABLE IF EXISTS tmp_columnas_validas;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getFileMapping`(IN p_CategoryId int)
 BEGIN
 	-- DECLARE id_categoria INT;
@@ -268,6 +268,18 @@ BEGIN
     where A.CategoriaId = p_CategoryId
     group by A.CategoriaId, A.CsvColumnName, A.AuxColumnName, A.IndexCsvColumn, A.CreatedAt, B.Delimiter
     having A.CreatedAt = max(A.CreatedAt);
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_InsertarLog`(
+	IN p_UsuarioId INT,
+    IN p_EmpresaId INT,
+    IN p_Accion VARCHAR(100),
+    IN p_Detalle TEXT)
+BEGIN
+	INSERT INTO logs (UsuarioId, EmpresaId, Accion, Detalle)
+    VALUES (p_UsuarioId, p_EmpresaId, p_Accion, p_Detalle);
 END$$
 DELIMITER ;
 
@@ -316,6 +328,9 @@ BEGIN
 		SET i = i + 1; -- Avanzar al siguiente registro
     END WHILE;
     
+    CALL sp_InsertarLog(userId, empIdEncontrada, 'Generar Categoria', concat('El usuario creó la categoría ', filename, '.'));
+    
+    CALL sp_GenerarVistaPorCategoria(filename);
 END$$
 DELIMITER ;
 
