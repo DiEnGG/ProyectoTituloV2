@@ -19,8 +19,113 @@
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="https://unpkg.com/grapesjs-rulers"></script>
 
+<div class="editor-buttons">
+<div id="guardarModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border:1px solid #ccc; z-index:9999">
+    <h3>Guardar plantilla</h3>
 
-<div id="gjs"></div>
+    <div style="margin-bottom:10px;">
+        <label>Selecciona plantilla para sobrescribir:</label><br />
+        <select id="selectSobrescribir"></select>
+            <button id="btnSobrescribir" class="btn-add">Sobrescribir</button>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Nombre para nueva plantilla:</label><br />
+        <input type="text" id="inputNombreNueva" />
+            <button id="btnCrearNueva" class="btn-add">Crear nueva</button>
+    </div>
+
+    <button onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
+</div>
+
+<!-- Botón para descargar como PDF -->
+    <button id="descargarPdfBtn" class="btn-add">Descargar PDF de Plantilla</button>
+<script>
+    document.getElementById('descargarPdfBtn').addEventListener('click', function () {
+        var select = document.getElementById('plantillasSelect');
+        var nombre = select.value;
+        if (!nombre) {
+            alert("Selecciona una plantilla para descargar el PDF");
+            return;
+        }
+        window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
+    });
+</script>
+
+    <button id="saveTemplateBtn" class="btn-add">Guardar Plantilla</button>
+<script>
+    let plantillasDisponibles = [];
+
+    // Al hacer clic en "Guardar Plantilla", mostrar modal
+    document.getElementById('saveTemplateBtn').addEventListener('click', function () {
+        fetch('/Metabase/ObtenerPlantillas')
+            .then(res => res.json())
+            .then(data => {
+                plantillasDisponibles = data;
+                const select = document.getElementById('selectSobrescribir');
+                select.innerHTML = "";
+                data.forEach(nombre => {
+                    const option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('inputNombreNueva').value = '';
+                document.getElementById('guardarModal').style.display = 'block';
+            });
+    });
+
+    // Función para guardar plantilla
+    function guardarPlantilla(nombre) {
+        const html = editor.getHtml();
+        const css = editor.getCss();
+
+        fetch('/Metabase/GuardarPlantilla', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contenido: html, css: css, nombre: nombre })
+        }).then(res => {
+            if (res.ok) {
+                alert("Plantilla guardada como: " + nombre);
+                document.getElementById('guardarModal').style.display = 'none';
+                cargarListadoPlantillas(nombre); // refresca y selecciona
+            } else {
+                alert("Error al guardar");
+            }
+        });
+    }
+
+    // Botón Sobrescribir
+    document.getElementById('btnSobrescribir').addEventListener('click', function () {
+        const nombre = document.getElementById('selectSobrescribir').value;
+        if (!nombre) return alert("Selecciona una plantilla");
+        guardarPlantilla(nombre);
+    });
+
+    // Botón Crear nueva
+    document.getElementById('btnCrearNueva').addEventListener('click', function () {
+        let baseNombre = document.getElementById('inputNombreNueva').value.trim();
+        if (!baseNombre) return alert("Ingresa un nombre");
+
+        let nombreFinal = baseNombre;
+        let contador = 1;
+        while (plantillasDisponibles.includes(nombreFinal)) {
+            nombreFinal = `${baseNombre}_${contador}`;
+            contador++;
+        }
+
+        guardarPlantilla(nombreFinal);
+    });
+</script>
+
+
+    <label for="plantillasSelect" class="label-csv">Plantillas guardadas:</label>
+    <select id="plantillasSelect" class="select-csv"></select>
+    <button id="cargarPlantillaBtn" class="btn-add">Cargar plantilla</button>
+</div>
+
+    <div id="gjs" class="editor-canvas"></div>
 
 
 <script>
@@ -57,7 +162,8 @@
       command: 'ruler-visibility',
       id: 'ruler-visibility'
     }]);
-            editor.setStyle(`
+
+        editor.setStyle(`
       body, html {
         margin: 0;
         padding: 0;
@@ -83,7 +189,7 @@
         margin: 10px 0;
       }
     `);
- 
+
 
         editor.BlockManager.add('a4-page', {
       label: 'Página A4',
@@ -165,7 +271,7 @@
               row.appendChild(td);
             });
        <script>
-        </div> 
+        </div>
         `
      });
 
@@ -183,110 +289,6 @@
       .catch(err => console.error("Error cargando URLs guardadas:", err));
     ;
 </script>
-<div id="guardarModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border:1px solid #ccc; z-index:9999">
-    <h3>Guardar plantilla</h3>
-
-    <div style="margin-bottom:10px;">
-        <label>Selecciona plantilla para sobrescribir:</label><br />
-        <select id="selectSobrescribir"></select>
-        <button id="btnSobrescribir">Sobrescribir</button>
-    </div>
-
-    <div style="margin-bottom:10px;">
-        <label>Nombre para nueva plantilla:</label><br />
-        <input type="text" id="inputNombreNueva" />
-        <button id="btnCrearNueva">Crear nueva</button>
-    </div>
-
-    <button onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
-</div>
-
-<!-- Botón para descargar como PDF -->
-<button id="descargarPdfBtn">Descargar PDF de Plantilla</button>
-<script>
-    document.getElementById('descargarPdfBtn').addEventListener('click', function () {
-        var select = document.getElementById('plantillasSelect');
-        var nombre = select.value;
-        if (!nombre) {
-            alert("Selecciona una plantilla para descargar el PDF");
-            return;
-        }
-        window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
-    });
-</script>
-
-<button id="saveTemplateBtn">Guardar Plantilla</button>
-<script>
-    let plantillasDisponibles = [];
-
-    // Al hacer clic en "Guardar Plantilla", mostrar modal
-    document.getElementById('saveTemplateBtn').addEventListener('click', function () {
-        fetch('/Metabase/ObtenerPlantillas')
-            .then(res => res.json())
-            .then(data => {
-                plantillasDisponibles = data;
-                const select = document.getElementById('selectSobrescribir');
-                select.innerHTML = "";
-                data.forEach(nombre => {
-                    const option = document.createElement('option');
-                    option.value = nombre;
-                    option.textContent = nombre;
-                    select.appendChild(option);
-                });
-
-                document.getElementById('inputNombreNueva').value = '';
-                document.getElementById('guardarModal').style.display = 'block';
-            });
-    });
-
-    // Función para guardar plantilla
-    function guardarPlantilla(nombre) {
-        const html = editor.getHtml();
-        const css = editor.getCss();
-
-        fetch('/Metabase/GuardarPlantilla', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contenido: html, css: css, nombre: nombre })
-        }).then(res => {
-            if (res.ok) {
-                alert("Plantilla guardada como: " + nombre);
-                document.getElementById('guardarModal').style.display = 'none';
-                cargarListadoPlantillas(nombre); // refresca y selecciona
-            } else {
-                alert("Error al guardar");
-            }
-        });
-    }
-
-    // Botón Sobrescribir
-    document.getElementById('btnSobrescribir').addEventListener('click', function () {
-        const nombre = document.getElementById('selectSobrescribir').value;
-        if (!nombre) return alert("Selecciona una plantilla");
-        guardarPlantilla(nombre);
-    });
-
-    // Botón Crear nueva
-    document.getElementById('btnCrearNueva').addEventListener('click', function () {
-        let baseNombre = document.getElementById('inputNombreNueva').value.trim();
-        if (!baseNombre) return alert("Ingresa un nombre");
-
-        let nombreFinal = baseNombre;
-        let contador = 1;
-        while (plantillasDisponibles.includes(nombreFinal)) {
-            nombreFinal = `${baseNombre}_${contador}`;
-            contador++;
-        }
-
-        guardarPlantilla(nombreFinal);
-    });
-</script>
-
-
-<!-- Plantillas -->
-<label for="plantillasSelect">Plantillas guardadas:</label>
-<select id="plantillasSelect"></select>
-<button id="cargarPlantillaBtn">Cargar plantilla</button>
 
 <script>
     // 1. Listar plantillas
