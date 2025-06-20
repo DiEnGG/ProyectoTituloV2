@@ -1,13 +1,53 @@
-﻿@{
-    ViewData["Title"] = "Catálogo de Plantillas";
-    var plantillas = new[] {
-        new { Nombre = "Hola", Titulo = "Plantilla Hola" },
-        new { Nombre = "ITSEC", Titulo = "Plantilla ITSEC" },
-        new { Nombre = "nose", Titulo = "Plantilla Nose" },
-        new { Nombre = "prueba", Titulo = "Plantilla Prueba" }
-    };
+﻿@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
+
+@{
+    var plantillasPath = System.IO.Path.Combine(Env.WebRootPath, "Plantillas");
+    var plantillas = new List<dynamic>();
+    if (Directory.Exists(plantillasPath))
+    {
+        var archivosPng = Directory.GetFiles(plantillasPath, "*.png");
+        foreach (var archivo in archivosPng)
+        {
+            var nombre = System.IO.Path.GetFileNameWithoutExtension(archivo);
+
+            plantillas.Add(new
+            {
+                Nombre = nombre,
+                Titulo = $"Plantilla {nombre}",
+                Imagen = $"/Plantillas/{nombre}.png",
+                HtmlUrl = $"/Plantillas/{nombre}.html"
+            });
+        }
+    }
 }
 
+<style>
+    .miniatura-preview {
+        width: 210px;
+        height: 297px;
+        margin: 0 auto 16px auto;
+        background: #fff;
+        box-shadow: 0 2px 16px #0002;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .plantilla-card {
+        margin-bottom: 32px;
+        text-align: center;
+    }
+
+    .catalogo {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: flex-start;
+    }
+</style>
 <h2>Catálogo de Plantillas Empresa ITSEC</h2>
 <div class="main-wrapper">
     <div class="catalogo">
@@ -15,8 +55,8 @@
         {
             <div class="plantilla-card">
                 <h4>@p.Titulo</h4>
-                <div class="miniatura-preview" data-htmlurl="@Url.Content($"~/Plantillas/{p.Nombre}.html")">
-                    <div class="miniatura-loading">Cargando vista previa...</div>
+                <div class="miniatura-preview">
+                    <img src="@p.Imagen" alt="Miniatura de @p.Nombre" style="width: 210px; height: 297px; object-fit: contain;" />
                 </div>
                 <p>
                     <a asp-controller="Metabase"
@@ -31,26 +71,6 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.miniatura-preview').forEach(function (div) {
-            const url = div.getAttribute('data-htmlurl');
-            fetch(url)
-                .then(r => r.text())
-                .then(html => {
-                    // Crea un contenedor interno con el HTML cargado
-                    const inner = document.createElement('div');
-                    inner.className = 'miniatura-html-content';
-                    inner.innerHTML = html;
-                    div.innerHTML = '';
-                    div.appendChild(inner);
-                })
-                .catch(err => {
-                    div.innerHTML = '<div style="color:#ff6b6b;">No se pudo cargar la vista previa.</div>';
-                });
-        });
-    });
-</script>
 
 
 
