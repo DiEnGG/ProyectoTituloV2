@@ -263,17 +263,19 @@
 
     // Cargar bloques de Metabase guardados desde backend
     fetch('/Metabase/ObtenerUrlsGuardadas')
-        .then(res => res.json())
-        .then(urls => {
-            urls.forEach((url, index) => {
-                editor.BlockManager.add(`metabase-guardado-${index}`, {
-                    label: `Metabase #${index + 1}`,
-                    content: `<iframe src="${url}" width="100%" height="600" frameborder="0"></iframe>`,
-                    category: 'Guardados Metabase'
-                });
+    .then(res => res.json())
+    .then(urls => {
+        urls.forEach((item, index) => {
+            // Usa item.url, item.nombre y item.empresa
+            editor.BlockManager.add(`metabase-guardado-${index}`, {
+                label: `${item.nombre} — ${item.empresa}`,
+                content: `<iframe src="${item.url}" width="100%" height="600" frameborder="0"></iframe>`,
+                category: 'Guardados Metabase'
             });
-        })
-        .catch(err => console.error("Error cargando URLs guardadas:", err));
+        });
+    })
+    .catch(err => console.error("Error cargando URLs guardadas:", err));
+
 </script>
 
 <script>

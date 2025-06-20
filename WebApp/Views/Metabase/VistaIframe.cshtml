@@ -27,18 +27,56 @@
 
     <button id="guardarUrlBtn" class="btn-add" style="margin-top:10px;">Guardar esta URL</button>
 }
+<!-- Modal para guardar URL -->
+<div id="modalGuardarUrl" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc; z-index:10001; min-width:300px;">
+    <h3>Guardar URL de Metabase</h3>
+    <div style="margin-bottom:10px;">
+        <label>Nombre para esta URL:</label><br>
+        <input type="text" id="nombreUrlInput" class="input-csv" placeholder="Nombre único" />
+    </div>
+    <div style="margin-bottom:10px;">
+        <label>Empresa asociada:</label><br>
+        <input type="text" id="empresaUrlInput" class="input-csv" placeholder="Nombre empresa" />
+    </div>
+    <button id="confirmarGuardarUrlBtn" class="btn-add">Guardar</button>
+    <button onclick="document.getElementById('modalGuardarUrl').style.display='none'">Cancelar</button>
+</div>
 
+<script>
+    document.getElementById('guardarUrlBtn')?.addEventListener('click', function () {
+        // Muestra el modal al hacer clic en "Guardar esta URL"
+        document.getElementById('modalGuardarUrl').style.display = 'block';
+    });
 
-    <script>
-        document.getElementById('guardarUrlBtn')?.addEventListener('click', function () {
-            const url = document.getElementById('metabaseIframe')?.src;
-            if (!url) return alert("No se encontró la URL");
-            fetch('/Metabase/GuardarUrl', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(url)
+    // Al confirmar el guardado en el modal
+    document.getElementById('confirmarGuardarUrlBtn')?.addEventListener('click', function () {
+        const url = document.getElementById('metabaseIframe')?.src;
+        const nombre = document.getElementById('nombreUrlInput').value.trim();
+        const empresa = document.getElementById('empresaUrlInput').value.trim();
+
+        if (!url) return alert("No se encontró la URL");
+        if (!nombre) return alert("Debes ingresar un nombre para la URL");
+        if (!empresa) return alert("Debes ingresar el nombre de la empresa");
+
+        // Llama al endpoint para guardar, con nombre y empresa
+        fetch('/Metabase/GuardarUrl', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url,
+                nombre,
+                empresa
             })
-            .then(res => res.ok ? alert("URL guardada correctamente") : alert("Error al guardar URL"));
+        })
+        .then(res => {
+            if (res.ok) {
+                alert("URL guardada correctamente");
+                document.getElementById('modalGuardarUrl').style.display = 'none';
+                document.getElementById('nombreUrlInput').value = '';
+                document.getElementById('empresaUrlInput').value = '';
+            } else {
+                alert("Error al guardar URL");
+            }
         });
-    </script>
-    
+    });
+</script>

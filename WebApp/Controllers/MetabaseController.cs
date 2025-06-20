@@ -44,7 +44,7 @@ public class MetabaseController : Controller
             ["exp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + (365 * 24 * 60 * 60)//1 año de expiración
         };
 
-        var secret = "fdf23e24b9fbf97c3ee5bd654054f7db09fcc42fee1371c7cec617a84ba26c89";
+        var secret = "29508034cebff3ce5df8f769981fb6707432f901943e5fabb0551d109e711005";
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -204,22 +204,38 @@ public class MetabaseController : Controller
         return Json(existe);
     }
 
-    private static List<string> urlsGuardadas = new();
+    private static List<UrlGuardada> urlsGuardadas = new List<UrlGuardada>();
+
+    public class UrlGuardada
+    {
+        public string Url { get; set; }
+        public string Nombre { get; set; }
+        public string Empresa { get; set; }
+    }
 
     [HttpPost]
-    public IActionResult GuardarUrl([FromBody] string url)
+    public IActionResult GuardarUrl([FromBody] UrlGuardada data)
     {
-        if (!string.IsNullOrEmpty(url) && !urlsGuardadas.Contains(url))
+        // Chequea que venga bien y no esté repetido
+        if (data != null && !string.IsNullOrEmpty(data.Url) && !string.IsNullOrEmpty(data.Nombre) && !string.IsNullOrEmpty(data.Empresa))
         {
-            urlsGuardadas.Add(url);
+            // Solo agrega si NO existe ya una con esa URL y nombre
+            bool existe = urlsGuardadas.Any(u => u.Url == data.Url && u.Nombre == data.Nombre);
+            if (!existe)
+            {
+                urlsGuardadas.Add(data);
+            }
+            return Ok();
         }
-        return Ok();
+        return BadRequest();
     }
+
 
     [HttpGet]
     public IActionResult ObtenerUrlsGuardadas()
     {
         return Json(urlsGuardadas);
     }
+
 
 }
