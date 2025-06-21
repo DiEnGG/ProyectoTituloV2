@@ -9,8 +9,6 @@
   <ItemGroup>
     <Content Remove="wwwroot\Plantillas\Hola.css" />
     <Content Remove="wwwroot\Plantillas\Hola.html" />
-    <Content Remove="wwwroot\Plantillas\ITSEC.css" />
-    <Content Remove="wwwroot\Plantillas\ITSEC.html" />
     <Content Remove="wwwroot\Plantillas\nose.css" />
     <Content Remove="wwwroot\Plantillas\nose.html" />
     <Content Remove="wwwroot\Plantillas\prueba.css" />
@@ -32,8 +30,6 @@
   <ItemGroup>
     <None Include="wwwroot\Plantillas\Hola.css" />
     <None Include="wwwroot\Plantillas\Hola.html" />
-    <None Include="wwwroot\Plantillas\ITSEC.css" />
-    <None Include="wwwroot\Plantillas\ITSEC.html" />
     <None Include="wwwroot\Plantillas\nose.css" />
     <None Include="wwwroot\Plantillas\nose.html" />
     <None Include="wwwroot\Plantillas\prueba.css" />
