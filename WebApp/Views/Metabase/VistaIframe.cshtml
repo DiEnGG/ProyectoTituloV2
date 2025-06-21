@@ -52,7 +52,7 @@
     document.getElementById('confirmarGuardarUrlBtn')?.addEventListener('click', async function () {
         const url = document.getElementById('metabaseIframe')?.src;
         const nombre = document.getElementById('nombreUrlInput').value.trim();
-        const empresa = document.getElementById('empresaUrlInput').value.trim();
+        const empresa = 1;//document.getElementById('empresaUrlInput').value.trim();
 
         if (!url) {
             Swal.fire({

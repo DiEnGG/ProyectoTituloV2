@@ -13,7 +13,7 @@ CREATE TABLE `archivos` (
   CONSTRAINT `archivos_ibfk_1` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`),
   CONSTRAINT `archivos_ibfk_2` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`),
   CONSTRAINT `archivos_ibfk_3` FOREIGN KEY (`CategoriaId`) REFERENCES `categoriasarchivo` (`CategoriaId`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `archivosmapping` (
   `MappingId` int NOT NULL AUTO_INCREMENT,
@@ -25,7 +25,7 @@ CREATE TABLE `archivosmapping` (
   PRIMARY KEY (`MappingId`),
   KEY `CategoriaId` (`CategoriaId`),
   CONSTRAINT `archivosmapping_ibfk_1` FOREIGN KEY (`CategoriaId`) REFERENCES `categoriasarchivo` (`CategoriaId`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `categoriasarchivo` (
   `CategoriaId` int NOT NULL AUTO_INCREMENT,
@@ -41,7 +41,7 @@ CREATE TABLE `categoriasarchivo` (
   KEY `UsuarioId` (`UsuarioId`),
   CONSTRAINT `categoriasarchivo_ibfk_1` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`),
   CONSTRAINT `categoriasarchivo_ibfk_2` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `datos` (
   `DatoId` int NOT NULL AUTO_INCREMENT,
@@ -94,7 +94,7 @@ CREATE TABLE `datos` (
   PRIMARY KEY (`DatoId`),
   KEY `ArchivoId` (`ArchivoId`),
   CONSTRAINT `datos_ibfk_1` FOREIGN KEY (`ArchivoId`) REFERENCES `archivos` (`ArchivoId`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3324 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `empresas` (
   `EmpresaId` int NOT NULL AUTO_INCREMENT,
@@ -104,7 +104,7 @@ CREATE TABLE `empresas` (
   `Activo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`EmpresaId`),
   UNIQUE KEY `Nombre` (`Nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `logs` (
   `LogId` int NOT NULL AUTO_INCREMENT,
@@ -118,7 +118,7 @@ CREATE TABLE `logs` (
   KEY `EmpresaId` (`EmpresaId`),
   CONSTRAINT `logs_ibfk_1` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`),
   CONSTRAINT `logs_ibfk_2` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `roles` (
   `RolId` int NOT NULL AUTO_INCREMENT,
@@ -126,7 +126,7 @@ CREATE TABLE `roles` (
   `Activo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`RolId`),
   UNIQUE KEY `Nombre` (`Nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `usuarios` (
   `UsuarioId` int NOT NULL AUTO_INCREMENT,
@@ -143,4 +143,18 @@ CREATE TABLE `usuarios` (
   KEY `RolId` (`RolId`),
   CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`),
   CONSTRAINT `usuarios_ibfk_2` FOREIGN KEY (`RolId`) REFERENCES `roles` (`RolId`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `widgets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `url` varchar(2083) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `UsuarioId` int NOT NULL,
+  `EmpresaId` int NOT NULL,
+  `fechaCreacion` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_usuario` (`UsuarioId`),
+  KEY `idx_empresa` (`EmpresaId`),
+  CONSTRAINT `fk_widget_empresa` FOREIGN KEY (`EmpresaId`) REFERENCES `empresas` (`EmpresaId`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_widget_usuario` FOREIGN KEY (`UsuarioId`) REFERENCES `usuarios` (`UsuarioId`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

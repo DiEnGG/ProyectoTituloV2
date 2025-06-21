@@ -272,6 +272,46 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GetRolByUserId`(IN p_userId int)
+BEGIN
+	select roles.RolId, roles.Nombre from proyectotitulo.roles
+	inner join proyectotitulo.usuarios on usuarios.RolId = roles.RolId
+	where usuarios.UsuarioId = p_userId limit 1;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_getWidgets`(IN p_userId INT)
+BEGIN
+	DECLARE v_empresaId INT;
+     SET v_empresaId = (
+            SELECT EmpresaId
+            FROM usuarios
+            WHERE UsuarioId = p_userId
+            LIMIT 1
+        );
+        
+        select 
+        widgets.Url
+        ,widgets.Nombre
+        ,empresas.Nombre as Empresa
+        from widgets
+        inner join empresas on empresas.EmpresaId = widgets.EmpresaId
+        where widgets.EmpresaId = v_empresaId;
+        
+        
+        
+         -- Insertar log
+        CALL sp_InsertarLog(
+            p_userId,
+            v_empresaId,
+            'Obtener Widgets',
+            CONCAT('El usuario Id ', p_userId, ' solicitó listado de widgets.')
+        );
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_InsertarLog`(
 	IN p_UsuarioId INT,
     IN p_EmpresaId INT,
@@ -335,16 +375,18 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertFileData`(IN p_categoryId int, IN data JSON)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertFileData`(IN p_userid int, IN p_categoryId int, IN data JSON)
 BEGIN
     DECLARE i INT DEFAULT 0;
     DECLARE total INT;
     DECLARE nombre_archivo varchar(255);
     DECLARE newArchivoId INT;
+    DECLARE v_empresaid INT;
+    
     
     -- Obtén la cantidad de registros en el JSON
     SET total = JSON_LENGTH(data);
-	
+	set v_empresaid = (select empresaId from usuarios where usuarioId = p_userid limit 1);
 	SET nombre_archivo = "nombre temporal";
     
     INSERT INTO archivos
@@ -358,8 +400,8 @@ BEGIN
     VALUES 
     (	nombre_archivo,
 		NOW(),
-        1,
-        1,
+        p_userid,
+        v_empresaid,
 		p_categoryId
     );
     
@@ -408,6 +450,88 @@ BEGIN
         
         SET i = i + 1; -- Avanzar al siguiente registro
     END WHILE;
+    
+    CALL sp_InsertarLog(p_userid, v_empresaid, 'Subir Archivo', concat('El usuario Id ', p_userid, ' subio el archivo ', nombre_archivo, '.'));
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertWidget`(
+    IN p_Url varchar(255),
+    IN p_Nombre varchar(255),
+    IN p_UserId INT
+)
+BEGIN
+    DECLARE v_empresaId INT;
+    DECLARE v_exists INT DEFAULT 0;
+
+    -- Verificar si ya existe un widget con misma url y nombre
+    SELECT COUNT(*) INTO v_exists
+    FROM widgets
+   WHERE url COLLATE utf8mb4_unicode_ci = p_Url COLLATE utf8mb4_unicode_ci
+	AND nombre COLLATE utf8mb4_unicode_ci = p_Nombre COLLATE utf8mb4_unicode_ci;
+
+    -- Si ya existe, retornar false
+    IF v_exists > 0 THEN
+        SELECT FALSE AS resultado;
+    ELSE
+        -- Obtener empresa asociada al usuario
+        SET v_empresaId = (
+            SELECT EmpresaId
+            FROM usuarios
+            WHERE UsuarioId = p_UserId
+            LIMIT 1
+        );
+
+        -- Insertar widget
+        INSERT INTO proyectotitulo.widgets (
+            url,
+            nombre,
+            UsuarioId,
+            EmpresaId,
+            fechaCreacion
+        ) VALUES (
+            p_Url,
+            p_Nombre,
+            p_UserId,
+            v_empresaId,
+            NOW()
+        );
+
+        -- Insertar log
+        CALL sp_InsertarLog(
+            p_UserId,
+            v_empresaId,
+            'Crear Widget',
+            CONCAT('El usuario Id ', p_UserId, ' creó el Widget ', p_Nombre, '.')
+        );
+
+        -- Retornar true
+        SELECT TRUE AS resultado;
+    END IF;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_ListarArchivosPorEmpresa`(IN p_userId int)
+BEGIN
+	declare v_empresaId int;
+    
+    set v_empresaId = (select EmpresaId from usuarios where usuarioId = p_userId limit 1);
+
+	select 
+	archivos.ArchivoId 
+	,archivos.NombreOriginal 
+	,archivos.RutaAlmacenamiento 
+	,archivos.FechaSubida 
+	,empresas.Nombre as NombreEmpresa
+	,usuarios.Email as NombreUsuario 
+	,categoriasarchivo.Nombre as NombreCategoria 
+	from archivos
+	inner join usuarios on usuarios.UsuarioId = archivos.UsuarioId
+	inner join empresas on empresas.EmpresaId = archivos.EmpresaId
+	inner join categoriasarchivo on categoriasarchivo.CategoriaId = archivos.CategoriaId
+    where archivos.EmpresaId = v_empresaId;
 END$$
 DELIMITER ;
 
@@ -502,27 +626,57 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_LoginUsuario`(
     OUT p_UsuarioId INT,
     OUT p_Nombre VARCHAR(255),
     OUT p_PasswordHash VARCHAR(255),
-    OUT p_EmpresaId INT,
-    OUT p_RolId INT,
+    OUT p_EmpresaNombre varchar(255),
+    OUT p_RolNombre varchar(255),
     OUT p_Activo BOOL
 )
 BEGIN
-    SELECT 
-        UsuarioId,
-        Nombre,
-        PasswordHash,
-        EmpresaId,
-        RolId,
-        Activo
-    INTO 
-        p_UsuarioId,
-        p_Nombre,
-        p_PasswordHash,
-        p_EmpresaId,
-        p_RolId,
-        p_Activo
+	declare v_EmpresaId int;
+    
+	SELECT 
+        Usuarios.UsuarioId
+        into 
+        p_UsuarioId
     FROM Usuarios
     WHERE Email = p_Email
+    AND  Usuarios.Activo = 1
     LIMIT 1;
+    
+    IF p_UsuarioId is not null then
+		 SELECT 
+			Usuarios.UsuarioId,
+			Usuarios.Nombre,
+			Usuarios.PasswordHash,
+			Empresas.Nombre,
+			Roles.Nombre,
+			Usuarios.Activo,
+			Empresas.EmpresaId
+		INTO 
+			p_UsuarioId,
+			p_Nombre,
+			p_PasswordHash,
+			p_EmpresaNombre,
+			p_RolNombre,
+			p_Activo,
+			v_EmpresaId
+		FROM Usuarios
+		inner join Roles on Roles.RolId = Usuarios.RolId
+		inner join Empresas on Empresas.EmpresaId = Usuarios.EmpresaId
+		WHERE Email = p_Email
+		AND  Usuarios.Activo = 1
+		LIMIT 1;
+		 CALL sp_InsertarLog(p_UsuarioId, v_EmpresaId, 'Login Usuario', CONCAT('El usuario ', p_Email, ' inició sesión.'));
+	ELSE
+
+		set v_EmpresaId = (select EmpresaId from empresas where nombre = "AutoReport" limit 1);
+		SET p_UsuarioId = (select UsuarioId from usuarios where nombre = "Sistema AutoReport" limit 1);
+		SET p_Nombre ="";
+		SET p_PasswordHash ="";
+		SET p_EmpresaNombre ="";
+		SET p_RolNombre ="";
+		SET p_Activo =FALSE;
+        CALL sp_InsertarLog(p_UsuarioId, v_EmpresaId, 'Login Usuario', concat('El usuario ', p_Email, ' intento iniciar sesión.'));
+	END IF;
+
 END$$
 DELIMITER ;

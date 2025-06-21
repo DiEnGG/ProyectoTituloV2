@@ -6,10 +6,26 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
+using WebApp.Models;
+using System.Security.Claims;
+using System.Net.Http;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [Authorize]
 public class MetabaseController : Controller
 {
+
+    private readonly IConfiguration _configuration;
+    private readonly string _endpoint = "/api/widget";
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public MetabaseController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
+    }
+
+
     public IActionResult Editor()
     {
         var token = GenerateMetabaseToken();
@@ -206,37 +222,63 @@ public class MetabaseController : Controller
         return Json(existe);
     }
 
-    private static List<UrlGuardada> urlsGuardadas = new List<UrlGuardada>();
-
-    public class UrlGuardada
-    {
-        public string Url { get; set; }
-        public string Nombre { get; set; }
-        public string Empresa { get; set; }
-    }
+    //private static List<UrlGuardada> urlsGuardadas = new List<UrlGuardada>();
 
     [HttpPost]
-    public IActionResult GuardarUrl([FromBody] UrlGuardada data)
+    public async Task<IActionResult> GuardarUrl([FromBody] WidgetRequest data)
     {
         // Chequea que venga bien y no esté repetido
-        if (data != null && !string.IsNullOrEmpty(data.Url) && !string.IsNullOrEmpty(data.Nombre) && !string.IsNullOrEmpty(data.Empresa))
+        if (data != null && !string.IsNullOrEmpty(data.Url) && !string.IsNullOrEmpty(data.Nombre))
         {
+            var client = _httpClientFactory.CreateClient();
             // Solo agrega si NO existe ya una con esa URL y nombre
-            bool existe = urlsGuardadas.Any(u => u.Url == data.Url && u.Nombre == data.Nombre);
-            if (!existe)
+            var userId = Int32.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Obtener la URL de la API desde appsettings.json
+            var apiUrl = _configuration["endpoint_api:url"]; // Accedemos a la URL configurada
+
+            data.UserId = userId;
+
+            var json = JsonConvert.SerializeObject(data);
+
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync($"{apiUrl}{_endpoint}/save-widget", content);
+
+            if (!response.IsSuccessStatusCode)
             {
-                urlsGuardadas.Add(data);
+                return StatusCode(500, "Error creando el Widget");
             }
             return Ok();
         }
-        return BadRequest();
+        return StatusCode(500, "Error creando el Widget");
     }
 
 
     [HttpGet]
-    public IActionResult ObtenerUrlsGuardadas()
+    public async Task<string> ObtenerUrlsGuardadas()
     {
-        return Json(urlsGuardadas);
+
+        var client = _httpClientFactory.CreateClient();
+
+        // Obtener la URL base desde el appsettings.json
+        var apiUrl = _configuration["endpoint_api:url"];
+
+
+        var userId = Int32.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        // Llamada a la API para obtener el mapeo de columnas
+        var response = await client.GetAsync($"{apiUrl}{_endpoint}/get-widget?userId={userId}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null; // Si no se puede obtener el mapeo, retornar null
+        }
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        //var columnMappings = JsonConvert.DeserializeObject<List<CsvMapping>>(jsonResponse);
+
+        return jsonResponse;
     }
 
 

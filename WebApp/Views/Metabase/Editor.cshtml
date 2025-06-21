@@ -121,7 +121,7 @@
             .then(urls => {
                 urls.forEach((item, index) => {
                     editor.BlockManager.add(`metabase-guardado-${index}`, {
-                        label: `${item.nombre} — ${item.empresa}`,
+                        label: `${item.Nombre} — ${item.Empresa}`,
                         content: `<iframe src="${item.url}" width="100%" height="600" frameborder="0"></iframe>`,
                         category: 'Guardados Metabase'
                     });
