@@ -42,41 +42,97 @@
     <button onclick="document.getElementById('modalGuardarUrl').style.display='none'">Cancelar</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.getElementById('guardarUrlBtn')?.addEventListener('click', function () {
         // Muestra el modal al hacer clic en "Guardar esta URL"
         document.getElementById('modalGuardarUrl').style.display = 'block';
     });
 
-    // Al confirmar el guardado en el modal
-    document.getElementById('confirmarGuardarUrlBtn')?.addEventListener('click', function () {
+    document.getElementById('confirmarGuardarUrlBtn')?.addEventListener('click', async function () {
         const url = document.getElementById('metabaseIframe')?.src;
         const nombre = document.getElementById('nombreUrlInput').value.trim();
         const empresa = document.getElementById('empresaUrlInput').value.trim();
 
-        if (!url) return alert("No se encontró la URL");
-        if (!nombre) return alert("Debes ingresar un nombre para la URL");
-        if (!empresa) return alert("Debes ingresar el nombre de la empresa");
+        if (!url) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se encontró la URL.'
+            });
+            return;
+        }
+        if (!nombre) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Nombre requerido',
+                text: 'Debes ingresar un nombre para la URL.'
+            });
+            return;
+        }
+        if (!empresa) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Empresa requerida',
+                text: 'Debes ingresar el nombre de la empresa.'
+            });
+            return;
+        }
 
-        // Llama al endpoint para guardar, con nombre y empresa
-        fetch('/Metabase/GuardarUrl', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                url,
-                nombre,
-                empresa
-            })
-        })
-        .then(res => {
+        // Muestra loader SweetAlert2
+        Swal.fire({
+            title: 'Guardando...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Llama al endpoint para guardar
+        try {
+            const res = await fetch('/Metabase/GuardarUrl', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url,
+                    nombre,
+                    empresa
+                })
+            });
+
+            Swal.close(); // Cierra el loader
+
             if (res.ok) {
-                alert("URL guardada correctamente");
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Listo!',
+                    text: 'URL guardada correctamente'
+                });
                 document.getElementById('modalGuardarUrl').style.display = 'none';
                 document.getElementById('nombreUrlInput').value = '';
                 document.getElementById('empresaUrlInput').value = '';
             } else {
-                alert("Error al guardar URL");
+                let msg = "Error al guardar la URL.";
+                try {
+                    const data = await res.json();
+                    if (data.mensaje) msg = data.mensaje;
+                } catch { }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: msg
+                });
             }
-        });
+        } catch (err) {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'No se pudo guardar la URL.',
+                footer: `<pre style="text-align:left">${err}</pre>`
+            });
+        }
     });
 </script>

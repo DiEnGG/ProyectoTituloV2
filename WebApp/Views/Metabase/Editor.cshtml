@@ -1,295 +1,154 @@
 ﻿@using System.Text.Json
 @{
     ViewData["Title"] = "Editor";
-    var metabaseIframeUrl = ViewBag.IframeUrl as string; // URL para embebido de Metabase
+    var metabaseIframeUrl = ViewBag.IframeUrl as string;
 }
-
 <h1>@ViewData["Title"]</h1>
 
-<!-- Librerías necesarias para GrapesJS y utilidades -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- Estilos y scripts principales -->
 <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet" />
 <link href="https://unpkg.com/grapesjs-rulers/dist/grapesjs-rulers.min.css" rel="stylesheet">
 <link href="https://unpkg.com/grapesjs-rte-extensions/dist/grapesjs-rte-extensions.min.css" rel="stylesheet">
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
-<script src="https://unpkg.com/grapesjs-plugin-forms"></script>
-<script src="https://unpkg.com/grapesjs-navbar"></script>
-<script src="https://unpkg.com/grapesjs-component-countdown"></script>
-<script src="https://unpkg.com/grapesjs-style-bg"></script>
-<script src="https://unpkg.com/grapesjs-tooltip"></script>
-<script src="https://unpkg.com/grapesjs-tui-image-editor"></script>
-<script src="https://unpkg.com/grapesjs-custom-code"></script>
-<script src="https://unpkg.com/grapesjs-touch"></script>
 <script src="https://unpkg.com/grapesjs-rulers"></script>
 <script src="https://unpkg.com/grapesjs-rte-extensions"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Bloque de botones para operaciones principales -->
 <div class="editor-buttons">
-
-    <!-- Modal para guardar plantilla -->
+    <!-- Modal de Guardado -->
     <div id="guardarModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border:1px solid #ccc; z-index:9999">
         <h3>Guardar plantilla</h3>
-
-        <!-- Selección de plantilla para sobrescribir -->
         <div style="margin-bottom:10px;">
             <label>Selecciona plantilla para sobrescribir:</label><br />
             <select id="selectSobrescribir"></select>
-            <button id="btnSobrescribir" class="btn-add">Sobrescribir</button>
+            <button type="button" id="btnSobrescribir" class="btn-add">Sobrescribir</button>
         </div>
-
-        <!-- Campo para crear nueva plantilla -->
         <div style="margin-bottom:10px;">
             <label>Nombre para nueva plantilla:</label><br />
             <input type="text" id="inputNombreNueva" />
-            <button id="btnCrearNueva" class="btn-add">Crear nueva</button>
+            <button type="button" id="btnCrearNueva" class="btn-add">Crear nueva</button>
         </div>
-
-        <button onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
+        <button type="button" onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
     </div>
 
-    <!-- Botón para descargar plantilla como PDF -->
-    <button id="descargarPdfBtn" class="btn-add">Descargar PDF de Plantilla</button>
-    <script>
-        // Descargar PDF de la plantilla seleccionada
-        document.getElementById('descargarPdfBtn').addEventListener('click', function () {
-            var select = document.getElementById('plantillasSelect');
-            var nombre = select.value;
-            if (!nombre) {
-                alert("Selecciona una plantilla para descargar el PDF");
-                return;
-            }
-            window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
-        });
-    </script>
-
-    <!-- Botón para abrir modal de guardado -->
-    <button id="saveTemplateBtn" class="btn-add">Guardar Plantilla</button>
-    <script>
-        let plantillasDisponibles = [];
-
-        // Muestra el modal de guardado y carga plantillas existentes
-        document.getElementById('saveTemplateBtn').addEventListener('click', function () {
-            fetch('/Metabase/ObtenerPlantillas')
-                .then(res => res.json())
-                .then(data => {
-                    plantillasDisponibles = data;
-                    const select = document.getElementById('selectSobrescribir');
-                    select.innerHTML = "";
-                    data.forEach(nombre => {
-                        const option = document.createElement('option');
-                        option.value = nombre;
-                        option.textContent = nombre;
-                        select.appendChild(option);
-                    });
-
-                    document.getElementById('inputNombreNueva').value = '';
-                    document.getElementById('guardarModal').style.display = 'block';
-                });
-        });
-
-        // Guarda la plantilla (con captura en imagen)
-        function guardarPlantilla(nombre) {
-            const html = editor.getHtml();
-            const css = editor.getCss();
-            const frame = document.querySelector('.gjs-frame');
-            if (frame && frame.contentDocument && frame.contentDocument.body) {
-                const body = frame.contentDocument.body;
-                // Busca un contenedor de tamaño A4 para capturar solo esa área
-                let a4div = body.querySelector('.a4-preview-capture');
-                if (!a4div) {
-                    a4div = frame.contentDocument.createElement('div');
-                    a4div.className = 'a4-preview-capture';
-                    a4div.style.width = '794px'; // Ancho A4 a 96dpi
-                    a4div.style.height = '1123px'; // Alto A4 a 96dpi
-                    a4div.style.overflow = 'hidden';
-                    a4div.style.position = 'relative';
-                    a4div.style.background = '#fff';
-                    a4div.innerHTML = body.innerHTML;
-                    body.appendChild(a4div);
-                }
-                // Toma un screenshot de esa área como imagen base64
-                html2canvas(a4div, { width: 794, height: 1123 }).then(canvas => {
-                    const imagenBase64 = canvas.toDataURL('image/png');
-                    if (a4div) a4div.remove(); // Limpia el div temporal si se creó
-                    // Guarda plantilla por API
-                    fetch('/Metabase/GuardarPlantilla', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contenido: html,
-                            css: css,
-                            nombre: nombre,
-                            imagenBase64: imagenBase64
-                        })
-                    }).then(res => {
-                        if (res.ok) {
-                            alert("Plantilla guardada como: " + nombre);
-                            document.getElementById('guardarModal').style.display = 'none';
-                            cargarListadoPlantillas(nombre);
-                        } else {
-                            alert("Error al guardar");
-                        }
-                    });
-                });
-            } else {
-                alert('No se encontró el canvas del editor');
-            }
-        }
-
-        // Botón para sobrescribir plantilla existente
-        document.getElementById('btnSobrescribir').addEventListener('click', function () {
-            const nombre = document.getElementById('selectSobrescribir').value;
-            if (!nombre) return alert("Selecciona una plantilla");
-            guardarPlantilla(nombre);
-        });
-
-        // Botón para crear plantilla con nombre único
-        document.getElementById('btnCrearNueva').addEventListener('click', function () {
-            let baseNombre = document.getElementById('inputNombreNueva').value.trim();
-            if (!baseNombre) return alert("Ingresa un nombre");
-            let nombreFinal = baseNombre;
-            let contador = 1;
-            while (plantillasDisponibles.includes(nombreFinal)) {
-                nombreFinal = `${baseNombre}_${contador}`;
-                contador++;
-            }
-            guardarPlantilla(nombreFinal);
-        });
-    </script>
-
+    <!-- Botón para abrir el modal de guardado -->
+    <button type="button" id="saveTemplateBtn" class="btn-add">Guardar Plantilla</button>
+    <!-- Botón para descargar PDF -->
+    <button type ="button" id="descargarPdfBtn" class="btn-add">Descargar PDF de Plantilla</button>
     <!-- Selector y botón para cargar plantillas -->
     <label for="plantillasSelect" class="label-csv">Plantillas guardadas:</label>
     <select id="plantillasSelect" class="select-csv"></select>
-    <button id="cargarPlantillaBtn" class="btn-add">Cargar plantilla</button>
+    <button type="button" id="cargarPlantillaBtn" class="btn-add">Cargar plantilla</button>
 </div>
 
-<!-- Contenedor principal del editor GrapesJS -->
+<!-- Editor de GrapesJS -->
 <div id="gjs" class="editor-canvas"></div>
 
 <script>
-    // Obtiene URL de Metabase del backend
-    var metabaseIframeUrl = @Html.Raw(JsonSerializer.Serialize(metabaseIframeUrl));
-    console.log('metabaseIframeUrl:', metabaseIframeUrl);
+    // ------ VARS GLOBALES ------
+    let editor;
+    let plantillasDisponibles = [];
+    let nombrePlantillaActual = null;
 
-    // Inicialización de GrapesJS
-    var editor = grapesjs.init({
-        container: '#gjs',
-        fromElement: true,
-        storageManager: false,
-        plugins: [
-            'gjs-blocks-basic',
-            'gjs-plugin-forms',
-            'gjs-navbar',
-            'gjs-component-countdown',
-            'gjs-style-bg',
-            'gjs-tooltip',
-            'gjs-tui-image-editor',
-            'gjs-custom-code',
-            'gjs-touch',
-            'grapesjs-rulers',
-            'grapesjs-rte-extensions'
-        ]
-    });
-
-    // Añade panel para opciones (rulers)
-    const pn = editor.Panels;
-    const panelViews = pn.addPanel({ id: 'options' });
-    panelViews.get('buttons').add([{
-        attributes: { title: 'Toggle Rulers' },
-        context: 'toggle-rulers',
-        label: `<svg width="18" viewBox="0 0 16 16"><path d="M0 8a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1H.5A.5.5 0 0 1 0 8z"/><path d="M4 3h8a1 1 0 0 1 1 1v2.5h1V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2.5h1V4a1 1 0 0 1 1-1zM3 9.5H2V12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9.5h-1V12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
-        command: 'ruler-visibility',
-        id: 'ruler-visibility'
-    }]);
-
-    // Estilos globales para el editor y las páginas A4
-    editor.setStyle(`
-        body, html { margin: 0; padding: 0; }
-        .gjs-cv-canvas { padding: 0 !important; margin: 0 !important; }
-        .pagina-a4 {
-            width: 794px; height: 1123px; background: white;
-            margin: 0 auto; box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            box-sizing: border-box; padding: 60px;
-        }
-        .pagina-a4 h1, .pagina-a4 h3, .pagina-a4 p { text-align: center; margin: 10px 0; }
-    `);
-
-    // Bloque para agregar página A4 vacía
-    editor.BlockManager.add('a4-page', {
-        label: 'Página A4',
-        category: 'Estructura',
-        content: `
-            <div
-                style="width:794px; height:1123px; max-width:794px; max-height:1123px; min-width:794px; min-height:1123px;
-                margin:auto; border:1px dashed #999; background:#fff; padding:20px; box-sizing:border-box;
-                display:flex; flex-direction:column; justify-content:flex-start; position:relative; overflow:hidden;">
-                <h3 style="text-align:center;">Página A4</h3>
-                <p>Contenido aquí...</p>
-            </div>
-        `
-    });
-
-    // Función para obtener fecha y hora actual en formato DD/MM/AAAA HH:mm:ss
-    function getTodayDateTime() {
-        const hoy = new Date();
-        const dd = String(hoy.getDate()).padStart(2, '0');
-        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        const yyyy = hoy.getFullYear();
-        const hh = String(hoy.getHours()).padStart(2, '0');
-        const min = String(hoy.getMinutes()).padStart(2, '0');
-        const ss = String(hoy.getSeconds()).padStart(2, '0');
-        return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
-    }
-
-    // Bloque para agregar portada estilo informe con fecha, autor, empresa
-    editor.BlockManager.add('portada-a4', {
-        label: 'Portada A4',
-        category: 'Estructura',
-        content: `
-            <div
-                style="width:794px; height:1123px; max-width:794px; max-height:1123px; min-width:794px; min-height:1123px; margin:auto;
-                border:1px dashed #999; background:#fff; padding:20px; box-sizing:border-box; display:flex; flex-direction:column;
-                justify-content:flex-start; position:relative; overflow:hidden;">
-                <h1 style="text-align:center; margin-top:100px;">Título del Informe</h1>
-                <h3 style="text-align:center;">Subtítulo o descripción</h3>
-                <div style="flex:1;"></div>
-                <p>Autor: [Nombre]</p>
-                <p>Fecha y hora: ${getTodayDateTime()}</p>
-                <p>Empresa: [Nombre Empresa]</p>
-            </div>
-        `
-    });
-
-    // Cargar bloques de Metabase guardados desde backend
-    fetch('/Metabase/ObtenerUrlsGuardadas')
-    .then(res => res.json())
-    .then(urls => {
-        urls.forEach((item, index) => {
-            // Usa item.url, item.nombre y item.empresa
-            editor.BlockManager.add(`metabase-guardado-${index}`, {
-                label: `${item.nombre} — ${item.empresa}`,
-                content: `<iframe src="${item.url}" width="100%" height="600" frameborder="0"></iframe>`,
-                category: 'Guardados Metabase'
-            });
+    // --- Inicialización del editor y bloques ---
+    document.addEventListener('DOMContentLoaded', function () {
+        var metabaseIframeUrl = @Html.Raw(JsonSerializer.Serialize(metabaseIframeUrl));
+        editor = grapesjs.init({
+            container: '#gjs',
+            fromElement: true,
+            storageManager: false,
+            plugins: [
+                'gjs-blocks-basic',
+                'grapesjs-rulers',
+                'grapesjs-rte-extensions'
+            ]
         });
-    })
-    .catch(err => console.error("Error cargando URLs guardadas:", err));
 
-</script>
+        editor.setStyle(`
+            body, html { margin: 0; padding: 0; }
+            .gjs-cv-canvas { padding: 0 !important; margin: 0 !important; }
+            .pagina-a4 {
+                width: 794px; height: 1123px; background: white;
+                margin: 0 auto; box-shadow: 0 0 5px rgba(0,0,0,0.1);
+                box-sizing: border-box; padding: 60px;
+            }
+            .pagina-a4 h1, .pagina-a4 h3, .pagina-a4 p { text-align: center; margin: 10px 0; }
+        `);
 
-<script>
-         // Devuelve el valor de un parámetro de la URL (por ejemplo: ?nombre=ITSEC)
+        editor.BlockManager.add('a4-page', {
+            label: 'Página A4',
+            category: 'Estructura',
+            content: `<div style="width:794px; height:1123px; max-width:794px; max-height:1123px; min-width:794px; min-height:1123px;
+                    margin:auto; border:1px dashed #999; background:#fff; padding:20px; box-sizing:border-box;
+                    display:flex; flex-direction:column; justify-content:flex-start; position:relative; overflow:hidden;">
+                    <h3 style="text-align:center;">Página A4</h3>
+                    <p>Contenido aquí...</p>
+                </div>`
+        });
+
+        function getTodayDateTime() {
+            const hoy = new Date();
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const yyyy = hoy.getFullYear();
+            const hh = String(hoy.getHours()).padStart(2, '0');
+            const min = String(hoy.getMinutes()).padStart(2, '0');
+            const ss = String(hoy.getSeconds()).padStart(2, '0');
+            return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
+        }
+
+        editor.BlockManager.add('portada-a4', {
+            label: 'Portada A4',
+            category: 'Estructura',
+            content: `<div style="width:794px; height:1123px; max-width:794px; max-height:1123px; min-width:794px; min-height:1123px; margin:auto;
+                        border:1px dashed #999; background:#fff; padding:20px; box-sizing:border-box; display:flex; flex-direction:column;
+                        justify-content:flex-start; position:relative; overflow:hidden;">
+                        <h1 style="text-align:center; margin-top:100px;">Título del Informe</h1>
+                        <h3 style="text-align:center;">Subtítulo o descripción</h3>
+                        <div style="flex:1;"></div>
+                        <p>Autor: [Nombre]</p>
+                        <p>Fecha y hora: ${getTodayDateTime()}</p>
+                        <p>Empresa: [Nombre Empresa]</p>
+
+                    </div>`
+        });
+
+        // Metabase blocks
+        fetch('/Metabase/ObtenerUrlsGuardadas')
+            .then(res => res.json())
+            .then(urls => {
+                urls.forEach((item, index) => {
+                    editor.BlockManager.add(`metabase-guardado-${index}`, {
+                        label: `${item.nombre} — ${item.empresa}`,
+                        content: `<iframe src="${item.url}" width="100%" height="600" frameborder="0"></iframe>`,
+                        category: 'Guardados Metabase'
+                    });
+                });
+            });
+
+        // --- Select de plantillas guardadas al iniciar ---
+        const nombreParam = getQueryParam('nombre');
+        cargarListadoPlantillas(nombreParam);
+        if (nombreParam) {
+            setTimeout(() => {
+                cargarPlantilla(nombreParam);
+            }, 400); // Da tiempo para cargar el select
+        }
+    });
+
+    // ----------- FUNCIONES UTILIDAD -----------
     function getQueryParam(param) {
         const params = new URLSearchParams(window.location.search);
         return params.get(param);
     }
 
-    // Carga la lista de plantillas y selecciona una si corresponde
     function cargarListadoPlantillas(nombreSeleccionado = null) {
         fetch('/Metabase/ObtenerPlantillas')
             .then(res => res.json())
             .then(plantillas => {
+                plantillasDisponibles = plantillas;
                 const select = document.getElementById('plantillasSelect');
                 select.innerHTML = "";
                 let encontrada = false;
@@ -303,62 +162,235 @@
                     }
                     select.appendChild(option);
                 });
-                // Si viene un nombre por URL pero no está, muestra alerta
                 if (nombreSeleccionado && !encontrada) {
-                    alert("La plantilla '" + nombreSeleccionado + "' no existe.");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Plantilla no existe',
+                        text: `La plantilla '${nombreSeleccionado}' no existe.`
+                    });
                 }
             });
     }
 
-    // Carga una plantilla específica en el editor y muestra alerta si no existe
-    function cargarPlantilla(nombre) {
-        fetch('/Metabase/ObtenerPlantilla?nombre=' + encodeURIComponent(nombre))
-            .then(res => {
-                if (!res.ok) throw new Error('No encontrada');
-                return res.json();
-            })
-            .then(data => {
-                // Si los datos vienen vacíos, alerta
-                if (!data.html && !data.css) {
-                    alert("La plantilla '" + nombre + "' no tiene contenido.");
-                    return;
-                }
-                editor.setComponents(data.html);
-                editor.setStyle(data.css);
-            })
-            .catch(() => {
-                alert("No se pudo cargar la plantilla '" + nombre + "'.");
-            });
-    }
-
-    // Al cargar la página, si viene ?nombre=, intenta cargarla automáticamente
-    document.addEventListener('DOMContentLoaded', function () {
-        const nombrePlantilla = getQueryParam('nombre');
-        if (nombrePlantilla) {
-            cargarListadoPlantillas(nombrePlantilla);
-            // Solo carga la plantilla si existe en el listado (espera un poco a que cargue el select)
-            setTimeout(() => {
-                // Revisa si la opción existe en el select
-                const select = document.getElementById('plantillasSelect');
-                const opciones = Array.from(select.options).map(opt => opt.value);
-                if (opciones.includes(nombrePlantilla)) {
-                    cargarPlantilla(nombrePlantilla);
-                }
-            }, 500); // Ajusta el tiempo si la lista de plantillas demora más
-        } else {
-            cargarListadoPlantillas();
+function cargarPlantilla(nombre) {
+    Swal.fire({
+        title: 'Cargando plantilla...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
     });
 
-    // Botón de cargar plantilla manual
+    fetch('/Metabase/ObtenerPlantilla?nombre=' + encodeURIComponent(nombre))
+        .then(res => {
+            if (!res.ok) throw new Error('No encontrada');
+            return res.json();
+        })
+        .then(data => {
+            Swal.close(); // Cierra el loader
+
+            if (!data.html && !data.css) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin contenido',
+                    text: `La plantilla '${nombre}' no tiene contenido.`
+                });
+                return;
+            }
+            editor.setComponents(data.html);
+            editor.setStyle(data.css);
+            nombrePlantillaActual = nombre;
+        })
+        .catch(() => {
+            Swal.close(); // Cierra el loader si hubo error
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: `No se pudo cargar la plantilla '${nombre}'.`
+            });
+        });
+}
+
+
+
+        function guardarPlantilla(nombre) {
+        const html = editor.getHtml();
+        const css = editor.getCss();
+        const frame = document.querySelector('.gjs-frame');
+        if (frame && frame.contentDocument && frame.contentDocument.body) {
+            const body = frame.contentDocument.body;
+            let a4div = body.querySelector('.a4-preview-capture');
+            if (!a4div) {
+                a4div = frame.contentDocument.createElement('div');
+                a4div.className = 'a4-preview-capture';
+                a4div.style.width = '794px';
+                a4div.style.height = '1123px';
+                a4div.style.overflow = 'hidden';
+                a4div.style.position = 'relative';
+                a4div.style.background = '#fff';
+                a4div.innerHTML = body.innerHTML;
+                body.appendChild(a4div);
+            }
+            Swal.fire({
+                title: 'Guardando plantilla...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            html2canvas(a4div, {
+                width: 794,
+                height: 1123,
+                ignoreElements: (element) => element.tagName === 'IFRAME'
+            }).then(canvas => {
+                const imagenBase64 = canvas.toDataURL('image/png');
+                if (a4div) a4div.remove();
+                fetch('/Metabase/GuardarPlantilla', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contenido: html,
+                        css: css,
+                        nombre: nombre,
+                        imagenBase64: imagenBase64
+                    })
+                }).then(async res => {
+                    let respuesta = {};
+                    try {
+                        respuesta = await res.json();
+                    } catch (e) {
+                        // Si no es JSON válido, lo deja vacío
+                    }
+
+                    if (res.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Listo!',
+                            text: respuesta.mensaje || ('Plantilla guardada como: ' + nombre),
+                            timer: 1800,
+                            showConfirmButton: true
+                        });
+                        cargarListadoPlantillas(nombre);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: respuesta.mensaje || 'No se pudo guardar la plantilla.',
+                            footer: respuesta.detalle ? `<pre style="text-align:left">${respuesta.detalle}</pre>` : undefined
+                        });
+                    }
+                }).catch((err) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de red',
+                        text: 'No se pudo guardar la plantilla.',
+                        footer: `<pre style="text-align:left">${err}</pre>`
+                    });
+                });
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se encontró el canvas del editor.'
+            });
+        }
+    }
+
+
+    // ---------- EVENTOS BOTONES ----------
+
+    // Abrir modal de guardado
+    document.getElementById('saveTemplateBtn').addEventListener('click', function () {
+        fetch('/Metabase/ObtenerPlantillas')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('selectSobrescribir');
+                select.innerHTML = "";
+                data.forEach(nombre => {
+                    const option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    select.appendChild(option);
+                });
+                if (nombrePlantillaActual && data.includes(nombrePlantillaActual)) {
+                    select.value = nombrePlantillaActual;
+                }
+                document.getElementById('inputNombreNueva').value = '';
+                document.getElementById('guardarModal').style.display = 'block';
+            });
+    });
+
+    // Botón para sobrescribir plantilla existente
+        // Botón para sobrescribir plantilla existente
+    document.getElementById('btnSobrescribir').addEventListener('click', function () {
+        const nombre = document.getElementById('selectSobrescribir').value;
+        if (!nombre) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin selección',
+                text: "Selecciona una plantilla para sobrescribir."
+            });
+            return;
+        }
+        document.getElementById('guardarModal').style.display = 'none'; // <<--- CIERRA MODAL
+        guardarPlantilla(nombre);
+    });
+
+
+    // Botón para crear plantilla nueva
+        document.getElementById('btnCrearNueva').addEventListener('click', function () {
+        let baseNombre = document.getElementById('inputNombreNueva').value.trim();
+        if (!baseNombre) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Falta el nombre',
+                text: 'Ingresa un nombre para la nueva plantilla.'
+            });
+            return;
+        }
+        let nombreFinal = baseNombre;
+        let contador = 1;
+        while (plantillasDisponibles.includes(nombreFinal)) {
+            nombreFinal = `${baseNombre}_${contador}`;
+            contador++;
+        }
+        document.getElementById('guardarModal').style.display = 'none'; // <<--- CIERRA MODAL
+        guardarPlantilla(nombreFinal);
+    });
+
+    // Botón para cargar plantilla seleccionada
     document.getElementById('cargarPlantillaBtn').addEventListener('click', function () {
         var select = document.getElementById('plantillasSelect');
         var nombre = select.value;
         if (!nombre) {
-            alert("Selecciona una plantilla");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin selección',
+                text: "Selecciona una plantilla."
+            });
             return;
         }
         cargarPlantilla(nombre);
     });
 
+    // Botón para descargar PDF de la plantilla seleccionada
+    document.getElementById('descargarPdfBtn').addEventListener('click', function () {
+        var select = document.getElementById('plantillasSelect');
+        var nombre = select.value;
+        if (!nombre) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin selección',
+                text: "Selecciona una plantilla para descargar el PDF"
+            });
+            return;
+        }
+        window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
+    });
+   
 </script>
