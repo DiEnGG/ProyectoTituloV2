@@ -1,0 +1,32 @@
+﻿@model List<Archivo>
+
+<h2 class="minimal-title">Archivos Subidos</h2>
+
+<a asp-action="Upload" class="btn-add">Subir Nuevo Archivo</a>
+
+<div class="table-wrapper">
+    <table class="minimal-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Usuario</th>
+                <th>Empresa</th>
+                <th>Categoría</th>
+                <th>Fecha de Subida</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>@a.NombreOriginal</td>
+                    <td>@a.NombreUsuario</td>
+                    <td>@a.NombreEmpresa</td>
+                    <td>@a.NombreCategoria</td>
+                    <td>@a.FechaSubida.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

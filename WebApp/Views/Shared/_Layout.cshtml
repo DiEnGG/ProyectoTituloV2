@@ -1,5 +1,13 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+
+
+@{
     Layout = null;
+    var isAdmin = User.IsInRole("Admin");
+    var isAdminAutoReport = User.IsInRole("Admin AutoReport");
+
+    var isAuthenticated = User.Identity.IsAuthenticated;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -29,6 +37,7 @@
                 <ul class="submenu" id="archivosSub">
                     <li><a asp-controller="File" asp-action="Upload">Subir Archivo</a></li>
                     <li><a asp-controller="File" asp-action="Category">Categoría Archivo</a></li>
+                    <li><a asp-controller="File" asp-action="VisorArchivos">Visualizar Archivos</a></li>
                 </ul>
             </div>
             <!-- Usuarios -->
@@ -42,28 +51,35 @@
                     <li><a asp-controller="Usuarios" asp-action="Create">Crear</a></li>
                 </ul>
             </div>
-            <!-- Empresas -->
-            <div class="sidebar-group">
-                <a class="nav-link has-submenu" onclick="toggleSubmenu('empresasSub')">
-                    <i class="fas fa-building"></i> <span class="label">Empresas</span>
-                    <i class="fas fa-chevron-down submenu-arrow"></i>
-                </a>
-                <ul class="submenu" id="empresasSub">
-                    <li><a asp-controller="Empresas" asp-action="Index">Listado</a></li>
-                    <li><a asp-controller="Empresas" asp-action="Create">Crear</a></li>
-                </ul>
-            </div>
-            <!-- Roles -->
-            <div class="sidebar-group">
-                <a class="nav-link has-submenu" onclick="toggleSubmenu('rolesSub')">
-                    <i class="fas fa-user-shield"></i> <span class="label">Roles</span>
-                    <i class="fas fa-chevron-down submenu-arrow"></i>
-                </a>
-                <ul class="submenu" id="rolesSub">
-                    <li><a asp-controller="Roles" asp-action="Index">Listado</a></li>
-                    <li><a asp-controller="Roles" asp-action="Create">Crear</a></li>
-                </ul>
-            </div>
+            @if (isAuthenticated && ( isAdmin || isAdminAutoReport)) //si el user esta logueado y es admin, puede ver este menú
+            {
+                <!-- Roles -->
+                <div class="sidebar-group">
+                    <a class="nav-link has-submenu" onclick="toggleSubmenu('rolesSub')">
+                        <i class="fas fa-user-shield"></i> <span class="label">Roles</span>
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <ul class="submenu" id="rolesSub">
+                        <li><a asp-controller="Roles" asp-action="Index">Listado</a></li>
+                        <li><a asp-controller="Roles" asp-action="Create">Crear</a></li>
+                    </ul>
+                </div>
+            }
+            @if (isAuthenticated && isAdminAutoReport) //si el user esta logueado y es admin, puede ver este menú
+            {
+                <!-- Empresas -->
+                <div class="sidebar-group">
+                    <a class="nav-link has-submenu" onclick="toggleSubmenu('empresasSub')">
+                        <i class="fas fa-building"></i> <span class="label">Empresas</span>
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <ul class="submenu" id="empresasSub">
+                        <li><a asp-controller="Empresas" asp-action="Index">Listado</a></li>
+                        <li><a asp-controller="Empresas" asp-action="Create">Crear</a></li>
+                    </ul>
+                </div>
+            }
+           
             <div class="sidebar-group">
                 <a class="nav-link has-submenu" onclick="toggleSubmenu('reportesSub')">
                     <i class="fas fa-user-shield"></i> <span class="label">Reportes</span>
@@ -108,7 +124,7 @@
         </div>
     </div>
 
-
+    
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');

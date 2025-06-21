@@ -22,6 +22,7 @@
     </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     async function procesarCsv() {
         const fileInput = document.getElementById('csvFile');
@@ -29,9 +30,26 @@
         const file = fileInput.files[0];
 
         if (!file || fileCategory.trim() === "") {
-            alert("Selecciona un archivo y su categoría.");
+            //alert("Selecciona un archivo y su categoría.");
+            //return;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Selecciona un archivo y una categoría.'
+            });
             return;
         }
+
+        // Mostrar el SweetAlert2 de carga
+        Swal.fire({
+            title: 'Procesando archivo...',
+            html: 'Esto puede tardar unos segundos',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         const chunkSize = 100;
         const reader = new FileReader();
@@ -54,12 +72,23 @@
                 });
 
                 if (!response.ok) {
-                    console.error("Error al enviar chunk:", await response.text());
-                    break;
+                    //console.error("Error al enviar chunk:", await response.text());
+                    //break;
+                    const errorText = await response.text();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al enviar archivo',
+                        text: errorText || 'Ocurrió un error durante la carga.'
+                    });
+                    return;
                 }
             }
 
-            alert("Archivo procesado exitosamente");
+            Swal.fire({
+                icon: 'success',
+                title: 'Completado',
+                text: 'Archivo procesado exitosamente'
+            });
         };
 
         reader.readAsText(file);

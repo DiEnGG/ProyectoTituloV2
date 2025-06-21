@@ -5,7 +5,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
 
+[Authorize]
 public class MetabaseController : Controller
 {
     public IActionResult Editor()

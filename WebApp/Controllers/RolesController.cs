@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Models;
 
-[Authorize]
+[Authorize(Roles = "Admin,Admin AutoReport")]
 public class RolesController : Controller
 {
     private readonly IApiService _apiService;
@@ -30,9 +30,12 @@ public class RolesController : Controller
         if (ModelState.IsValid)
         {
             await _apiService.PostAsync(_endpoint, rol);
+            TempData["Mensaje"] = "Rol  creado correctamente.";
+            TempData["TipoMensaje"] = "success";
             return RedirectToAction(nameof(Index));
         }
-
+        TempData["Mensaje"] = "Ocurrio un error!";
+        TempData["TipoMensaje"] = "error";
         return View(rol);
     }
 
@@ -48,9 +51,12 @@ public class RolesController : Controller
         if (ModelState.IsValid)
         {
             await _apiService.PutAsync(_endpoint, rol);
+            TempData["Mensaje"] = "Rol editado correctamente.";
+            TempData["TipoMensaje"] = "success";
             return RedirectToAction(nameof(Index));
         }
-
+        TempData["Mensaje"] = "Ocurrio un error!";
+        TempData["TipoMensaje"] = "error";
         return View(rol);
     }
 
@@ -68,8 +74,9 @@ public class RolesController : Controller
             RolId = RolId,
             Activar = false // o true si lo quieres reactivar
         };
-
-        await _apiService.PostAsync($"{_endpoint}/del", request); // "/del" es el endpoint que tienes en tu API
+        TempData["Mensaje"] = "Rol eliminado correctamente.";
+        TempData["TipoMensaje"] = "success";
+        await _apiService.PostAsync($"{_endpoint}/del", request);
         return RedirectToAction(nameof(Index), "Roles");
     }
 

@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WebApp.Data;
 var builder = WebApplication.CreateBuilder(args);
-//builder.Services.AddDbContext<WebAppContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("WebAppContext") ?? throw new InvalidOperationException("Connection string 'WebAppContext' not found.")));
 
 // Agregamos los servicios al contenedor.
 builder.Services.AddControllersWithViews();
-//builder.Services.AddHttpClient();
+
 builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("endpoint_api:url"));
@@ -17,8 +15,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Login"; // Redirige aquí si no está autenticado
-        options.LogoutPath = "/Logout"; // Redirige aquí si no está autenticado
-       // options.AccessDeniedPath = "/AccesoDenegado"; // Opcional
+        options.LogoutPath = "/Logout"; // Redirige aquí cuando se cierre la sesion
+        options.AccessDeniedPath = "/AccesoDenegado"; // si el usuario inicio sesion pero no tiene permisos, se le redirige aca.
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     });
 
@@ -49,7 +47,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Login}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 

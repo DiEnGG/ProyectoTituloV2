@@ -71,7 +71,19 @@
     </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if (TempData["Mensaje"] != null)
+    {
+        <text>
+                    Swal.fire({
+                        icon: '@TempData["TipoMensaje"]',
+                        title: '@(TempData["TipoMensaje"]?.ToString() == "success" ? "Éxito" : "Error")',
+                        text: '@TempData["Mensaje"]'
+                    });
+        </text>
+    }
+</script>
 
 
 

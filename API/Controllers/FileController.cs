@@ -15,39 +15,11 @@ namespace API.Controllers
     {
         private readonly IConfiguration _configuration;
 
-        public FileController(IConfiguration configuration) {
+        public FileController(IConfiguration configuration)
+        {
 
             _configuration = configuration;
         }
-
-        //[HttpGet("get-files")]
-        //public IActionResult GetFiles()
-        //{
-        //    List<object> files = new List<object>();
-        //    string connectionString = _configuration.GetConnectionString("MySqlConnection");
-
-        //    using (var connection = new MySqlConnection(connectionString))
-        //    {
-        //        connection.Open();
-        //        string query = "SELECT * FROM csvdata"; // Ajusta la consulta según tu tabla
-        //        using (var cmd = new MySqlCommand(query, connection))
-        //        using (var reader = cmd.ExecuteReader())
-        //        {
-        //            while (reader.Read())
-        //            {
-        //                files.Add(new
-        //                {
-        //                    Id = reader.GetInt32("Id"),
-        //                    FileName = reader.GetString("FileName"),
-        //                    AuxString1 = reader.IsDBNull(reader.GetOrdinal("AuxString1")) ? null : reader.GetString("AuxString1"),
-        //                    AuxString2 = reader.IsDBNull(reader.GetOrdinal("AuxString2")) ? null : reader.GetString("AuxString2"),
-        //                    AuxString3 = reader.IsDBNull(reader.GetOrdinal("AuxString3")) ? null : reader.GetString("AuxString3")
-        //                });
-        //            }
-        //        }
-        //    }
-        //    return Ok(files);
-        //}
 
         [HttpGet("get-mapping")]
         public async Task<IActionResult> GetFileMapping(int CategoryId)
@@ -122,6 +94,7 @@ namespace API.Controllers
                         command.CommandType = CommandType.StoredProcedure;
 
                         // Parámetros del procedimiento almacenado
+                        command.Parameters.AddWithValue("@p_userId", request.UsuarioId);
                         command.Parameters.AddWithValue("@p_categoryId", request.categoria.CategoriaId);
                         command.Parameters.AddWithValue("@data", json);
 
@@ -224,8 +197,45 @@ namespace API.Controllers
             return Ok(jsonResponse); // Retornar los datos en formato JSON
         }
 
+        [HttpGet("get-archivos")]
+        public async Task<IActionResult> GetArchivos(int UserId)
+        {
+            ///var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            List<ArchivoResponse> archivoList = new List<ArchivoResponse>();
+            string connectionString = _configuration.GetConnectionString("MySqlConnection");
 
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                MySqlCommand command = new MySqlCommand("sp_ListarArchivosPorEmpresa", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@p_UserId", UserId);
 
+                // Ejecutar el procedimiento almacenado y leer los resultados
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var archivo = new ArchivoResponse
+                        {
+                            ArchivoId = reader.GetInt32("ArchivoId"),
+                            NombreOriginal = reader.GetString("NombreOriginal"),
+                            RutaAlmacenamiento = reader.IsDBNull("RutaAlmacenamiento") ? "" : reader.GetString("RutaAlmacenamiento"),
+                            FechaSubida = reader.GetDateTime("FechaSubida"),
+                            NombreEmpresa = reader.GetString("NombreEmpresa"),
+                            NombreUsuario = reader.GetString("NombreUsuario"),
+                            NombreCategoria = reader.GetString("NombreCategoria"),
+                        };
 
+                        archivoList.Add(archivo); // Agregar el mapeo a la lista
+                    }
+                }
+            }
+
+            // Convertir la lista a JSON
+            string jsonResponse = JsonConvert.SerializeObject(archivoList);
+
+            return Ok(jsonResponse); // Retornar los datos en formato JSON
+        }
     }
 }

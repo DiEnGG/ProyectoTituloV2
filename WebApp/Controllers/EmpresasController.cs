@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Models;
 
-[Authorize]
+[Authorize(Roles = "Admin,Admin AutoReport")]
 public class EmpresasController : Controller
 {
     private readonly IApiService _apiService;
@@ -18,7 +18,9 @@ public class EmpresasController : Controller
         var empresas = await _apiService.GetAsync<Empresa>(_endpoint);
         if (empresas == null || empresas.Count == 0)
         {
-            ModelState.AddModelError("", "No se encontraron empresas.");
+            //ModelState.AddModelError("", "No se encontraron empresas.");
+            TempData["Mensaje"] = "No se encontraron empresas.";
+            TempData["TipoMensaje"] = "error";
             return View(new List<Empresa>());
         }
 
@@ -43,9 +45,12 @@ public class EmpresasController : Controller
         if (ModelState.IsValid)
         {
             await _apiService.PostAsync(_endpoint, empresa);
+            TempData["Mensaje"] = "Empresa creada correctamente.";
+            TempData["TipoMensaje"] = "success";
             return RedirectToAction(nameof(Index));
         }
-
+        TempData["Mensaje"] = "Ocurrio un error!";
+        TempData["TipoMensaje"] = "error";
         return View(empresa);
     }
 
@@ -61,9 +66,12 @@ public class EmpresasController : Controller
         if (ModelState.IsValid)
         {
             await _apiService.PutAsync(_endpoint, empresa);
+            TempData["Mensaje"] = "Empresa modificada correctamente.";
+            TempData["TipoMensaje"] = "success";
             return RedirectToAction(nameof(Index));
         }
-
+        TempData["Mensaje"] = "Ocurrio un error!";
+        TempData["TipoMensaje"] = "error";
         return View(empresa);
     }
 
@@ -81,7 +89,8 @@ public class EmpresasController : Controller
             EmpresaId = EmpresaId,
             Activar = false // o true si lo quieres reactivar
         };
-
+        TempData["Mensaje"] = "Empresa eliminada correctamente.";
+        TempData["TipoMensaje"] = "success";
         await _apiService.PostAsync($"{_endpoint}/del", request); // "/del" es el endpoint que tienes en tu API
         return RedirectToAction(nameof(Index), "Empresas");
     }

@@ -13,6 +13,7 @@ using WebApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 [Route("[controller]")]
 [Authorize]
@@ -21,6 +22,7 @@ public class FileController : Controller
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IApiService _apiService;
     private readonly IConfiguration _configuration;
+    private readonly string _endpoint = "/api/file";
 
     public FileController(IHttpClientFactory httpClientFactory, IApiService apiService, IConfiguration configuration)
     {
@@ -60,7 +62,9 @@ public class FileController : Controller
     {
         if (file == null || file.Length == 0 || !ModelState.IsValid)
         {
-            ModelState.AddModelError("File", "Por favor, selecciona un archivo válido.");
+            //ModelState.AddModelError("File", "Por favor, selecciona un archivo válido.");
+            TempData["Mensaje"] = "Por favor, selecciona un archivo válido.";
+            TempData["TipoMensaje"] = "error";
             return View();
         }
 
@@ -90,10 +94,17 @@ public class FileController : Controller
 
         if (!response.IsSuccessStatusCode)
         {
-            return StatusCode((int)response.StatusCode, "Error al procesar el archivo");
+            //return StatusCode((int)response.StatusCode, "Error al procesar el archivo");
+            TempData["Mensaje"] = "Error al procesar el archivo";
+            TempData["TipoMensaje"] = "error";
+            return View();
         }
 
-        return Ok(new { mensaje = "Archivo procesado exitosamente" });
+        //return Ok(new { mensaje = "Archivo procesado exitosamente" });
+        TempData["Mensaje"] = "Archivo procesado exitosamente";
+        TempData["TipoMensaje"] = "success"; // puedes usar "error" también
+
+        return View();
 
     }
 
@@ -153,8 +164,10 @@ public class FileController : Controller
 
         // Crear la estructura de datos que se enviará a la API
         CategoryFile cr = new CategoryFile { CategoriaId = categoryId, Nombre = "", Descripcion = "", delimiter = "" };
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var datos = new
         {
+            UsuarioId = userId,
             categoria = cr,
             data = dataFormated
         };
@@ -232,4 +245,13 @@ public class FileController : Controller
 
         return dataList;
     }
+
+    [HttpGet("VisorArchivos")]
+    public async Task<IActionResult> VisorArchivos()
+    {
+        var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var archivos = await _apiService.GetAsync<Archivo>($"{_endpoint}/get-archivos?UserId={usuarioId}");
+        return View(archivos); // Retorna una lista de Archivos
+    }
+
 }
