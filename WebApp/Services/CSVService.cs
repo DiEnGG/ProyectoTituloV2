@@ -29,49 +29,114 @@ namespace WebApp.Services
                 return "String";
         }
 
-        public static async Task<List<FileMapping>> getRecommendedFileMapping(IFormFile file, IConfiguration configuration, string delimiter = ",") 
-        {
+        //public static async Task<List<FileMapping>> getRecommendedFileMapping(IFormFile file, IConfiguration configuration, string delimiter = ",") 
+        //{
 
+        //    var recommendations = new List<FileMapping>();
+
+        //    string cleanedCsv;
+        //    using (var tempReader = new StreamReader(file.OpenReadStream()))
+        //    {
+        //        cleanedCsv = tempReader.ReadToEnd().Replace("\"", ""); // Reemplaza comillas
+        //    }
+
+        //    //using var reader = new StreamReader(file.OpenReadStream());
+        //    using var csvReader = new StringReader(cleanedCsv);
+
+        //    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        //    {
+        //        HasHeaderRecord = true,
+        //        Delimiter = delimiter,
+        //        Quote = '"',
+        //        TrimOptions = TrimOptions.Trim,
+        //        BadDataFound = null
+        //    };
+
+        //    using var csv = new CsvReader(csvReader, config);
+
+        //    await csv.ReadAsync();
+        //    csv.ReadHeader();
+        //    var headers = csv.HeaderRecord;
+
+        //    var rows = new List<Dictionary<string, string>>();
+        //    int maxLines = Int32.Parse(configuration["ChunkSize"]);
+
+        //    while (await csv.ReadAsync() && rows.Count < maxLines)
+        //    {
+        //        var row = new Dictionary<string, string>();
+        //        foreach (var header in headers)
+        //        {
+        //            row[header] = csv.GetField(header)?.Trim();
+        //        }
+        //        rows.Add(row);
+        //    }
+
+        //    // Contadores para numeración
+        //    int dateTimeCount = 0;
+        //    int decimalCount = 0;
+        //    int stringCount = 0;
+
+        //    for (int i = 0; i < headers.Length; i++)
+        //    {
+        //        var header = headers[i];
+
+        //        var values = rows.Select(r => r[header]).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
+        //        var type = InferTypeByMajority(values);
+
+        //        string auxName = type switch
+        //        {
+        //            "DateTime" => $"AuxDateTime{++dateTimeCount}",
+        //            "Decimal" => $"AuxDecimal{++decimalCount}",
+        //            _ => $"AuxString{++stringCount}"
+        //        };
+
+        //        recommendations.Add(new FileMapping
+        //        {
+        //            CsvColumnName = header,
+        //            AuxColumnName = auxName,
+        //            IndexCsvColumn = i.ToString(),
+        //        });
+        //    }
+
+        //    return recommendations;
+        //}
+
+        public static async Task<List<FileMapping>> getRecommendedFileMapping(IFormFile file, IConfiguration configuration, string delimiter = ",")
+        {
             var recommendations = new List<FileMapping>();
 
-            string cleanedCsv;
-            using (var tempReader = new StreamReader(file.OpenReadStream()))
-            {
-                cleanedCsv = tempReader.ReadToEnd().Replace("\"", ""); // Reemplaza comillas
-            }
-
-            //using var reader = new StreamReader(file.OpenReadStream());
-            using var csvReader = new StringReader(cleanedCsv);
+            using var reader = new StreamReader(file.OpenReadStream());
 
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
                 Delimiter = delimiter,
-                Quote = '"',
+                Quote = '"',                         // ← importante
                 TrimOptions = TrimOptions.Trim,
                 BadDataFound = null
             };
 
-            using var csv = new CsvReader(csvReader, config);
+            using var csv = new CsvReader(reader, config);
 
             await csv.ReadAsync();
             csv.ReadHeader();
             var headers = csv.HeaderRecord;
 
             var rows = new List<Dictionary<string, string>>();
-            int maxLines = Int32.Parse(configuration["ChunkSize"]);
+            int maxLines = int.Parse(configuration["ChunkSize"]);
 
             while (await csv.ReadAsync() && rows.Count < maxLines)
             {
                 var row = new Dictionary<string, string>();
                 foreach (var header in headers)
                 {
-                    row[header] = csv.GetField(header)?.Trim();
+                    var field = csv.GetField(header);
+                    row[header] = field?.Trim();
                 }
                 rows.Add(row);
             }
 
-            // Contadores para numeración
+            // Contadores
             int dateTimeCount = 0;
             int decimalCount = 0;
             int stringCount = 0;
@@ -80,7 +145,11 @@ namespace WebApp.Services
             {
                 var header = headers[i];
 
-                var values = rows.Select(r => r[header]).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
+                // Extraer valores no vacíos
+                var values = rows.Select(r => r[header])
+                                 .Where(v => !string.IsNullOrWhiteSpace(v))
+                                 .ToList();
+
                 var type = InferTypeByMajority(values);
 
                 string auxName = type switch
@@ -94,12 +163,13 @@ namespace WebApp.Services
                 {
                     CsvColumnName = header,
                     AuxColumnName = auxName,
-                    IndexCsvColumn = i.ToString(),
+                    IndexCsvColumn = i.ToString()
                 });
             }
 
             return recommendations;
         }
+
 
     }
 }

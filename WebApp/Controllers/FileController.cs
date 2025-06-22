@@ -193,58 +193,108 @@ public class FileController : Controller
     }
 
 
-    private List<Dictionary<string, object>> FormatearChunk(List<string> chunk, string columnMappingsJson)
-    {
-        List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
-        
-        // Parsear el string JSON de los mapeos de columnas
-        var columnMappings = JArray.Parse(columnMappingsJson);
+    //private List<Dictionary<string, object>> FormatearChunk(List<string> chunk, string columnMappingsJson)
+    //{
+    //    List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
 
-        // Procesar cada fila en el chunk
+    //    // Parsear el string JSON de los mapeos de columnas
+    //    var columnMappings = JArray.Parse(columnMappingsJson);
+
+    //    // Procesar cada fila en el chunk
+    //    foreach (var fila in chunk)
+    //    {
+    //        string delimiter = columnMappings[0]["delimiter"].ToString();
+    //        var valores = fila.Split(delimiter);
+    //        var columnasFormateadas = new Dictionary<string, object>();
+
+    //        foreach (var mapping in columnMappings)
+    //        {
+    //            var csvColumnName = mapping["CsvColumnName"].ToString();
+    //            var auxColumnName = mapping["AuxColumnName"].ToString();
+    //            var indexCsvColumn = int.Parse(mapping["IndexCsvColumn"].ToString()); // Ajustar al índice 0
+
+
+    //            var valor = valores[indexCsvColumn].Trim();
+
+    //            var isHeader = valor.Equals(csvColumnName);
+
+    //            if (!isHeader)
+    //            {
+    //                if (auxColumnName.StartsWith("AuxString"))
+    //                {
+    //                    columnasFormateadas[auxColumnName] = valor;
+    //                }
+    //                else if (auxColumnName.StartsWith("AuxDateTime"))
+    //                {
+    //                    DateTime dateValor = DateTime.Parse(valor);
+    //                    columnasFormateadas[auxColumnName] = dateValor.ToString("yyyy-MM-dd");
+    //                }
+    //                else if (auxColumnName.StartsWith("AuxDecimal"))
+    //                {
+    //                    //decimal decimalValor = decimal.Parse(valor);
+    //                    string decimalValor = valor;
+    //                    columnasFormateadas[auxColumnName] = decimalValor;
+    //                }
+    //            }
+    //        }
+    //        if (columnasFormateadas.Count > 0)
+    //        {
+    //            dataList.Add(columnasFormateadas);
+    //        }
+    //    }
+
+    //    return dataList;
+    //}
+
+    private List<Dictionary<string, object>> FormatearChunk(
+        List<string> chunk, string columnMappingsJson)
+    {
+        var dataList = new List<Dictionary<string, object>>();
+        var columnMappings = JArray.Parse(columnMappingsJson);
+        var delimiter = columnMappings[0]["delimiter"]!.ToString();
+
         foreach (var fila in chunk)
         {
-            string delimiter = columnMappings[0]["delimiter"].ToString();
-            var valores = fila.Split(delimiter);
+            // Leer la línea como si fuera un archivo
+            using var reader = new StringReader(fila);
+            using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                Delimiter = delimiter,
+                HasHeaderRecord = false   // porque tú ya conoces el mapping
+            });
+
+            if (!csv.Read()) continue;              // línea vacía
+            var valores = csv.Parser.Record;        // ← array de strings limpios
+
             var columnasFormateadas = new Dictionary<string, object>();
 
             foreach (var mapping in columnMappings)
             {
-                var csvColumnName = mapping["CsvColumnName"].ToString();
-                var auxColumnName = mapping["AuxColumnName"].ToString();
-                var indexCsvColumn = int.Parse(mapping["IndexCsvColumn"].ToString()); // Ajustar al índice 0
+                int indexCsvColumn = int.Parse(mapping["IndexCsvColumn"]!.ToString());
+                var auxColumnName = mapping["AuxColumnName"]!.ToString();
+                var csvColumnName = mapping["CsvColumnName"]!.ToString();
+                var valor = valores[indexCsvColumn];
 
+                bool isHeader = valor.Equals(csvColumnName, StringComparison.OrdinalIgnoreCase);
+                if (isHeader) continue;
 
-                var valor = valores[indexCsvColumn].Trim();
-
-                var isHeader = valor.Equals(csvColumnName);
-
-                if (!isHeader)
-                {
-                    if (auxColumnName.StartsWith("AuxString"))
-                    {
-                        columnasFormateadas[auxColumnName] = valor;
-                    }
-                    else if (auxColumnName.StartsWith("AuxDateTime"))
-                    {
-                        DateTime dateValor = DateTime.Parse(valor);
-                        columnasFormateadas[auxColumnName] = dateValor.ToString("yyyy-MM-dd");
-                    }
-                    else if (auxColumnName.StartsWith("AuxDecimal"))
-                    {
-                        //decimal decimalValor = decimal.Parse(valor);
-                        string decimalValor = valor;
-                        columnasFormateadas[auxColumnName] = decimalValor;
-                    }
-                }
+                if (auxColumnName.StartsWith("AuxString"))
+                    columnasFormateadas[auxColumnName] = valor;
+                else if (auxColumnName.StartsWith("AuxDateTime"))
+                    columnasFormateadas[auxColumnName] = DateTime.Parse(valor).ToString("yyyy-MM-dd");
+                else if (auxColumnName.StartsWith("AuxDecimal"))
+                    columnasFormateadas[auxColumnName] = valor; // o decimal.Parse(valor, CultureInfo.InvariantCulture)
             }
+
             if (columnasFormateadas.Count > 0)
-            {
                 dataList.Add(columnasFormateadas);
-            }
         }
 
         return dataList;
     }
+
+
+
 
     [HttpGet("VisorArchivos")]
     public async Task<IActionResult> VisorArchivos()
