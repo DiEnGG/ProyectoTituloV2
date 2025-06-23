@@ -85,7 +85,7 @@ html, body {
         display: block;
         padding: 0.4rem 0;
         font-size: 0.9rem;
-        color: #ccc;
+        color: var(--text-color);
         text-decoration: none;
     }
 
@@ -436,30 +436,30 @@ html, body {
         color: var(--primary-color);
     }
 
-.btn-action {
-    background-color: var(--primary-color);
-    color: var(--bg-color);
-    padding: 0.4rem 0.8rem;
-    margin-right: 0.3rem;
-    border-radius: 4px;
+.btn-add.danger {
+    background-color: #ff4c4c;
+    color: white;
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 0.85rem;
+    margin-bottom: 1rem;
     transition: background-color 0.2s ease;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-family: inherit;
+    width: auto;
+    max-width: max-content;
     display: inline-block;
 }
 
-    .btn-action.danger {
-        background-color: #ff4c4c;
-        color: white;
+    .btn-add.danger:focus,
+    .btn-add.danger:active {
+        outline: none;
+        box-shadow: none;
+        border: none;
     }
-
-        .btn-action.danger:hover {
-            background-color: #ff1a1a;
-        }
-
-        .btn-action.danger:hover {
-            background-color: #ff1a1a;
-        }
 .big-form input,
 .big-form select,
 .big-form button {
@@ -573,6 +573,8 @@ html, body {
     --card-bg: #ffffff;
     --border-color: #ddd;
     --hover-color: #e0fff5;
+    --select-arrow-color: #000;
+
 }
 
 .dark-mode {
@@ -583,6 +585,9 @@ html, body {
     --card-bg: #000000;
     --border-color: #2e2e33;
     --hover-color: #00ff9d22;
+    --select-arrow-color: #fff;
+    --input-bg: #1a1a1a; /* Fondo negro oscuro */
+    --input-text: #ffffff; /* Texto blanco */
 }
 
 /* Usar variables */
@@ -644,8 +649,8 @@ label,
 
 .btn-logout {
     width: 100%;
-    background-color: var(--primary-color);
-    color: var(--bg-color);
+    background-color: #ff4c4c; /* Rojo base */
+    color: white;
     border: none;
     padding: 0.6rem 1rem;
     border-radius: 8px;
@@ -660,8 +665,9 @@ label,
 }
 
     .btn-logout:hover {
-        background-color: #00ffaa;
+        background-color: #ff1a1a;
     }
+
 /* Estado "No" */
 .estado-fila.si:hover {
     background-color: #00ff9d22;
@@ -709,14 +715,45 @@ label,
     color: white;
   
 }*/
-.select-csv,
+.select-csv{
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2rem;
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+    /* Flecha personalizada */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='16' height='16' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7L10 12L15 7' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* En modo claro cambiamos la flecha a negra */
+.light-mode .select-csv {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='16' height='16' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7L10 12L15 7' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 .input-csv {
     padding: 8px 12px;
     border-radius: 6px;
-    border: none;
-    background-color: #1a1a1a;
-    color: white;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
+
+
 
 
 .catalogo {
@@ -777,5 +814,66 @@ label,
     border-radius: 8px;
     overflow: hidden;
 }
+.logo-img {
+    max-width: 160px;
+    transition: max-width 0.3s ease;
+}
 
+.sidebar.collapsed .logo-img {
+    max-width: 40px;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 20px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 8px;
+    z-index: 10001;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    min-width: 300px;
+}
 
+.modal-group {
+    margin-bottom: 16px;
+}
+
+.btn-add.listas {
+    background-color: #00ffaa; /* Verde brillante */
+    color: black; /* Mejor contraste, puedes usar white si prefieres */
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-family: inherit;
+    width: auto;
+    max-width: max-content;
+    display: inline-block;
+}
+
+.btn-add.listase {
+    background-color: #ff4c4c;
+    color: white;
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-family: inherit;
+    width: auto;
+    max-width: max-content;
+    display: inline-block;
+}

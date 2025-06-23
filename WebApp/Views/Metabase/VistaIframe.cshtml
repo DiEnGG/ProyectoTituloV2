@@ -28,19 +28,24 @@
     <button id="guardarUrlBtn" class="btn-add" style="margin-top:10px;">Guardar esta URL</button>
 }
 <!-- Modal para guardar URL -->
-<div id="modalGuardarUrl" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc; z-index:10001; min-width:300px;">
+<!-- Modal para guardar URL -->
+<div id="modalGuardarUrl" class="modal">
     <h3>Guardar URL de Metabase</h3>
-    <div style="margin-bottom:10px;">
-        <label>Nombre para esta URL:</label><br>
+
+    <div class="modal-group">
+        <label for="nombreUrlInput">Nombre para esta URL:</label><br>
         <input type="text" id="nombreUrlInput" class="input-csv" placeholder="Nombre único" />
     </div>
-    <div style="margin-bottom:10px;">
-        <label>Empresa asociada:</label><br>
+
+    <div class="modal-group">
+        <label for="empresaUrlInput">Empresa asociada:</label><br>
         <input type="text" id="empresaUrlInput" class="input-csv" placeholder="Nombre empresa" />
     </div>
+
     <button id="confirmarGuardarUrlBtn" class="btn-add">Guardar</button>
-    <button onclick="document.getElementById('modalGuardarUrl').style.display='none'">Cancelar</button>
+    <button type="button" class="btn-add danger" onclick="document.getElementById('modalGuardarUrl').style.display='none'">Cancelar</button>
 </div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

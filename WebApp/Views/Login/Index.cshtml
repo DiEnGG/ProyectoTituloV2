@@ -26,7 +26,7 @@
             <div class="left-content">
                 <div class="logo-container">
                     <img src="~/img/login-autoreport.png" alt="Logo Autoreport" />
-                    <h1>Solucion al alcanze de tu mano</h1>
+                    <h1>Soluciones simples, al alcance de tu mano</h1>
                 </div>
             </div>
         </div>
@@ -37,17 +37,17 @@
 
                 <form asp-action="Login" method="post">
                     <div class="form-group">
-                        <label asp-for="Email">User Name</label>
+                        <label asp-for="Email">Usurio</label>
                         <input asp-for="Email" placeholder="User Name" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Password">Password</label>
+                        <label asp-for="Password">Contraseña</label>
                         <input asp-for="Password" type="password" placeholder="Password" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
                     <div class="form-buttons">
-                        <button type="submit" class="btn btn-login">Login</button>
+                        <button type="submit" class="btn btn-login">Ingresar</button>
                     </div>
                 </form>
             </div>

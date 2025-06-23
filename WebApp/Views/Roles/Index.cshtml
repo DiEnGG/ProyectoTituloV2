@@ -21,8 +21,8 @@
                     <td>@r.Nombre</td>
                     <td>@(r.Activo ? "Sí" : "No")</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@r.RolId" class="btn-action">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@r.RolId" class="btn-action danger">Eliminar</a>
+                        <a asp-action="Edit" asp-route-id="@r.RolId" class="btn-add listas">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@r.RolId" class="btn-add listase">Eliminar</a>
                     </td>
                 </tr>
             }

@@ -18,20 +18,24 @@
 
 <div class="editor-buttons">
     <!-- Modal de Guardado -->
-    <div id="guardarModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:white; padding:20px; border:1px solid #ccc; z-index:9999">
+    <div id="guardarModal" class="modal">
         <h3>Guardar plantilla</h3>
-        <div style="margin-bottom:10px;">
-            <label>Selecciona plantilla para sobrescribir:</label><br />
-            <select id="selectSobrescribir"></select>
+
+        <div class="modal-group">
+            <label for="selectSobrescribir">Selecciona plantilla para sobrescribir:</label><br />
+            <select id="selectSobrescribir" class="select-csv"></select>
             <button type="button" id="btnSobrescribir" class="btn-add">Sobrescribir</button>
         </div>
-        <div style="margin-bottom:10px;">
-            <label>Nombre para nueva plantilla:</label><br />
-            <input type="text" id="inputNombreNueva" />
+
+        <div class="modal-group">
+            <label for="inputNombreNueva">Nombre para nueva plantilla:</label><br />
+            <input type="text" id="inputNombreNueva" class="input-csv" />
             <button type="button" id="btnCrearNueva" class="btn-add">Crear nueva</button>
         </div>
-        <button type="button" onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
+
+        <button type="button" class="btn-add danger" onclick="document.getElementById('guardarModal').style.display='none'">Cancelar</button>
     </div>
+
 
     <!-- Botón para abrir el modal de guardado -->
     <button type="button" id="saveTemplateBtn" class="btn-add">Guardar Plantilla</button>
@@ -41,8 +45,8 @@
     <label for="plantillasSelect" class="label-csv">Plantillas guardadas:</label>
     <select id="plantillasSelect" class="select-csv"></select>
     <button type="button" id="cargarPlantillaBtn" class="btn-add">Cargar plantilla</button>
-    <button type="button" id="editarNombreBtn" class="btn-edit">Editar nombre</button>
-    <button type="button" id="eliminarPlantillaBtn" class="btn-danger">Eliminar</button>
+    <button type="button" id="editarNombreBtn" class="btn-add">Editar nombre</button>
+    <button type="button" id="eliminarPlantillaBtn" class="btn-add danger">Eliminar</button>
 
 </div>
 
