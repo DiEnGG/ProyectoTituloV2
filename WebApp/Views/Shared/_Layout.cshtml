@@ -41,8 +41,10 @@
                 </ul>
             </div>
             <!-- Usuarios -->
-            <div class="sidebar-group">
-                <a class="nav-link has-submenu" onclick="toggleSubmenu('usuariosSub')">
+            @if (isAuthenticated && (isAdmin || isAdminAutoReport))
+            {
+                <div class="sidebar-group">
+                    <a class="nav-link has-submenu" onclick="toggleSubmenu('usuariosSub')">
                     <i class="fas fa-users"></i> <span class="label">Usuarios</span>
                     <i class="fas fa-chevron-down submenu-arrow"></i>
                 </a>
@@ -51,7 +53,8 @@
                     <li><a asp-controller="Usuarios" asp-action="Create">Crear</a></li>
                 </ul>
             </div>
-            @if (isAuthenticated && ( isAdmin || isAdminAutoReport)) //si el user esta logueado y es admin, puede ver este menú
+            }
+            @if (isAuthenticated && (isAdminAutoReport)) //si el user esta logueado y es admin, puede ver este menú
             {
                 <!-- Roles -->
                 <div class="sidebar-group">
@@ -87,7 +90,9 @@
                 </a>
                 <ul class="submenu" id="reportesSub">
                     <li><a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="Editor">Editar informe</a></li>
+                    @if (isAuthenticated && isAdminAutoReport){ //si el user esta logueado y es admin, puede ver este menú
                     <li><a class="dropdown-item" asp-area="" asp-controller="Metabase" asp-action="VistaIframe">Agregar y ver iframe metabase</a></li>
+                    }
                 </ul>
             </div>
             <form asp-action="Logout" asp-controller="Login" method="post" class="logout-form">

@@ -3,6 +3,11 @@
 @{
     var empresas = ViewBag.Empresas as List<Empresa>;
     var roles = ViewBag.Roles as List<Rol>;
+    var esAdmin = ViewBag.EsAdmin as bool? ?? false;
+    if (esAdmin)
+    {
+        roles = roles.Where(r => r.Nombre != "Admin AutoReport").ToList();
+    }
 }
 
 <div class="centered-wrapper">

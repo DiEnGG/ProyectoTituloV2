@@ -1,7 +1,13 @@
 ﻿@model List<Usuario>
 
-<h2 class="minimal-title">Usuarios</h2>
+@{
+    int usuarioActualId = ViewBag.UsuarioActualId;
+    var roles = ViewBag.Roles as List<Rol>;
+    bool esAdminAutoReport = ViewBag.EsAdminAutoReport as bool? ?? false;
+    Func<int, string> nombreRol = rolId => roles?.FirstOrDefault(r => r.RolId == rolId)?.Nombre ?? "";
+}
 
+<h2 class="minimal-title">Usuarios</h2>
 <a asp-action="Create" class="btn-add">Crear Nuevo Usuario</a>
 
 <div class="table-wrapper">
@@ -17,29 +23,44 @@
         <tbody>
             @foreach (var usuario in Model)
             {
+                var esAdminAutoReportUsuario = nombreRol(usuario.RolId) == "Admin AutoReport";
+                var esElMismo = usuario.UsuarioId == usuarioActualId;
+
                 <tr class="estado-fila @(usuario.Activo ? "si" : "no")">
                     <td>@usuario.Nombre</td>
                     <td>@usuario.Email</td>
                     <td>@(usuario.Activo ? "Sí" : "No")</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-add listas">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@usuario.UsuarioId" class="btn-add listase">Eliminar</a>
+                        @*
+                          - Si soy "Admin AutoReport", puedo editar y eliminar a cualquiera (incluido yo).
+                          - Si soy cualquier otro, puedo editarme a mí mismo y editar/eliminar a otros, salvo:
+                            - No puedo eliminarme a mí mismo.
+                            - No puedo editar/eliminar a un Admin AutoReport.
+                        *@
+                        @if (esAdminAutoReport)
+                        {
+                            // Admin AutoReport puede editar y eliminar a cualquiera
+                            <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-add listas">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@usuario.UsuarioId" class="btn-add listase">Eliminar</a>
+                        }
+                        else
+                        {
+                            // Otros usuarios (admin normal):
+                            if (esElMismo)
+                            {
+                                // Puede editarse a sí mismo, pero no eliminarse
+                                <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-add listas">Editar</a>
+                            }
+                            else if (!esAdminAutoReportUsuario)
+                            {
+                                // Puede editar/eliminar a otros, salvo que sean Admin AutoReport
+                                <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-add listas">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@usuario.UsuarioId" class="btn-add listase">Eliminar</a>
+                            }
+                        }
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    @if (TempData["Mensaje"] != null)
-    {
-        <text>
-                    Swal.fire({
-                        icon: '@TempData["TipoMensaje"]',
-                        title: '@(TempData["TipoMensaje"]?.ToString() == "success" ? "Éxito" : "Error")',
-                        text: '@TempData["Mensaje"]'
-                    });
-        </text>
-    }
-</script>
