@@ -22,6 +22,7 @@ namespace API.Controllers
         [HttpPost("save-widget")]
         public async Task<IActionResult> saveWidgetMetabase([FromBody] WidgetRequest request)
         {
+            Console.WriteLine("Request: " + (request == null ? "null" : System.Text.Json.JsonSerializer.Serialize(request)));
             // Verificar que el objeto WidgetRequest tenga la estructura esperada
             if (request == null || string.IsNullOrEmpty(request.Url.ToString()) || string.IsNullOrEmpty(request.Nombre.ToString()))
             {
@@ -65,7 +66,7 @@ namespace API.Controllers
         [HttpGet("get-widget")]
         public async Task<IActionResult> GetWidget(int userId)
         {
-            List<WidgetRequest> widgetList = new List<WidgetRequest>(); // Lista de objetos CsvMapping para almacenar los resultados
+            List<WidgetGet> widgetList = new List<WidgetGet>(); // Lista de objetos CsvMapping para almacenar los resultados
             string connectionString = _configuration.GetConnectionString("MySqlConnection");
 
             using (var connection = new MySqlConnection(connectionString))
@@ -80,7 +81,7 @@ namespace API.Controllers
                 {
                     while (await reader.ReadAsync())
                     {
-                        var widget = new WidgetRequest
+                        var widget = new WidgetGet
                         {
                             Url = reader.GetString("url")
                             ,
