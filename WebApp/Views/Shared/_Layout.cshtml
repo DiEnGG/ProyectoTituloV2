@@ -68,7 +68,7 @@
                     </ul>
                 </div>
             }
-            @if (isAuthenticated && isAdminAutoReport) //si el user esta logueado y es admin, puede ver este menú
+          @*   @if (isAuthenticated && isAdminAutoReport) //si el user esta logueado y es admin, puede ver este menú
             {
                 <!-- Empresas -->
                 <div class="sidebar-group">
@@ -81,7 +81,7 @@
                         <li><a asp-controller="Empresas" asp-action="Create">Crear</a></li>
                     </ul>
                 </div>
-            }
+            } *@
            
             <div class="sidebar-group">
                 <a class="nav-link has-submenu" onclick="toggleSubmenu('reportesSub')">

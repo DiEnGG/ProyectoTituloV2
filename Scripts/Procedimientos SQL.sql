@@ -691,9 +691,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_LoginUsuario`(
     OUT p_Activo BOOL
 )
 BEGIN
-	declare v_EmpresaId int;
-    
-	SELECT 
+    declare v_EmpresaId int;
+    declare usuarioID int;
+    declare empresaid int;
+
+    SELECT 
         Usuarios.UsuarioId
         into 
         p_UsuarioId
@@ -701,42 +703,44 @@ BEGIN
     WHERE Email = p_Email
     AND  Usuarios.Activo = 1
     LIMIT 1;
-    
-    IF p_UsuarioId is not null then
-		 SELECT 
-			Usuarios.UsuarioId,
-			Usuarios.Nombre,
-			Usuarios.PasswordHash,
-			Empresas.Nombre,
-			Roles.Nombre,
-			Usuarios.Activo,
-			Empresas.EmpresaId
-		INTO 
-			p_UsuarioId,
-			p_Nombre,
-			p_PasswordHash,
-			p_EmpresaNombre,
-			p_RolNombre,
-			p_Activo,
-			v_EmpresaId
-		FROM Usuarios
-		inner join Roles on Roles.RolId = Usuarios.RolId
-		inner join Empresas on Empresas.EmpresaId = Usuarios.EmpresaId
-		WHERE Email = p_Email
-		AND  Usuarios.Activo = 1
-		LIMIT 1;
-		 CALL sp_InsertarLog(p_UsuarioId, v_EmpresaId, 'Login Usuario', CONCAT('El usuario ', p_Email, ' inició sesión.'));
-	ELSE
 
-		set v_EmpresaId = (select EmpresaId from empresas where nombre = "AutoReport" limit 1);
-		SET p_UsuarioId = (select UsuarioId from usuarios where nombre = "Sistema AutoReport" limit 1);
-		SET p_Nombre ="";
-		SET p_PasswordHash ="";
-		SET p_EmpresaNombre ="";
-		SET p_RolNombre ="";
-		SET p_Activo =FALSE;
-        CALL sp_InsertarLog(p_UsuarioId, v_EmpresaId, 'Login Usuario', concat('El usuario ', p_Email, ' intento iniciar sesión.'));
-	END IF;
+    IF p_UsuarioId is not null then
+         SELECT 
+            Usuarios.UsuarioId,
+            Usuarios.Nombre,
+            Usuarios.PasswordHash,
+            Empresas.Nombre,
+            Roles.Nombre,
+            Usuarios.Activo,
+            Empresas.EmpresaId
+        INTO 
+            p_UsuarioId,
+            p_Nombre,
+            p_PasswordHash,
+            p_EmpresaNombre,
+            p_RolNombre,
+            p_Activo,
+            v_EmpresaId
+        FROM Usuarios
+        inner join Roles on Roles.RolId = Usuarios.RolId
+        inner join Empresas on Empresas.EmpresaId = Usuarios.EmpresaId
+        WHERE Email = p_Email
+        AND  Usuarios.Activo = 1
+        LIMIT 1;
+         CALL sp_InsertarLog(p_UsuarioId, v_EmpresaId, 'Login Usuario', CONCAT('El usuario ', p_Email, ' inició sesión.'));
+    ELSE
+
+        set empresaId = (select EmpresaId from empresas where nombre = "AutoReport" limit 1);
+        SET usuarioId = (select UsuarioId from usuarios where nombre = "Sistema AutoReport" limit 1);
+        SET p_Nombre ="";
+        SET p_PasswordHash ="";
+        SET p_EmpresaNombre ="";
+        SET p_RolNombre ="";
+        SET p_Activo =FALSE;
+        set p_UsuarioId = -1;
+        set v_EmpresaId = -1;
+        CALL sp_InsertarLog(usuarioId, empresaId, 'Login Usuario', concat('El usuario ', p_Email, ' intento iniciar sesión.'));
+    END IF;
 
 END$$
 DELIMITER ;
