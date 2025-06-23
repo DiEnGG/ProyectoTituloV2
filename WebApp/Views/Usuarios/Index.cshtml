@@ -22,8 +22,8 @@
                     <td>@usuario.Email</td>
                     <td>@(usuario.Activo ? "Sí" : "No")</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-action">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@usuario.UsuarioId" class="btn-action danger">Eliminar</a>
+                        <a asp-action="Edit" asp-route-id="@usuario.UsuarioId" class="btn-add listas">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@usuario.UsuarioId" class="btn-add listase">Eliminar</a>
                     </td>
                 </tr>
             }

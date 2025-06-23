@@ -13,7 +13,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>@ViewData["Title"] AUTOREPORT</title>
+    <title>@ViewData["AUTOREPORT"]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -24,8 +24,8 @@
     <div class="layout-wrapper">
         <nav class="sidebar" id="sidebar">
             <div class="logo-container">
-                <a href="/">
-                    <img src="~/img/logo-autoreport.png" alt="Logo AutoReport" class="logo-img" />
+                <a asp-controller="Home" asp-action="Index">
+                    <img id="logoAutoReport" src="~/img/logo-autoreport.png" alt="Logo AutoReport" class="logo-img" />
                 </a>
             </div>
             <!-- Archivos -->
@@ -126,9 +126,21 @@
 
     
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const logo = document.getElementById('logoAutoReport');
+
+            sidebar.classList.toggle('collapsed');
+
+            // Cambia la imagen del logo según el estado del sidebar
+                   if (sidebar.classList.contains('collapsed')) {
+            logo.src = '/img/logo-icono.png'; // solo ícono
+        } else {
+            logo.src = '/img/logo-autoreport.png'; // logo completo
         }
+
+        }
+
         function toggleSubmenu(id) {
             const group = document.getElementById(id).parentElement;
             group.classList.toggle('open');
@@ -164,6 +176,8 @@
         }
     }
 </script>
+
+
 
 </body>
 </html>
