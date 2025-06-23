@@ -41,6 +41,9 @@
     <label for="plantillasSelect" class="label-csv">Plantillas guardadas:</label>
     <select id="plantillasSelect" class="select-csv"></select>
     <button type="button" id="cargarPlantillaBtn" class="btn-add">Cargar plantilla</button>
+    <button type="button" id="editarNombreBtn" class="btn-edit">Editar nombre</button>
+    <button type="button" id="eliminarPlantillaBtn" class="btn-danger">Eliminar</button>
+
 </div>
 
 <!-- Editor de GrapesJS -->
@@ -116,17 +119,20 @@
         });
 
         // Metabase blocks
-        fetch('/Metabase/ObtenerUrlsGuardadas')
-            .then(res => res.json())
-            .then(urls => {
-                urls.forEach((item, index) => {
-                    editor.BlockManager.add(`metabase-guardado-${index}`, {
-                        label: `${item.Nombre} — ${item.Empresa}`,
-                        content: `<iframe src="${item.url}" width="100%" height="600" frameborder="0"></iframe>`,
-                        category: 'Guardados Metabase'
-                    });
+            fetch('/Metabase/ObtenerUrlsGuardadas')
+        .then(res => res.json())
+        .then(urls => {
+            // Muestra TODO el JSON recibido
+            console.log('Respuesta completa de ObtenerUrlsGuardadas:', urls);
+            urls.forEach((item, index) => {
+                editor.BlockManager.add(`metabase-guardado-${index}`, {
+                    label: `${item.Nombre} — ${item.Empresa}`,
+                    content: `<iframe src="${item.Url}" width="100%" height="600" frameborder="0"></iframe>`,
+                    category: 'Guardados Metabase'
                 });
             });
+        });
+
 
         // --- Select de plantillas guardadas al iniciar ---
         const nombreParam = getQueryParam('nombre');
@@ -136,6 +142,23 @@
                 cargarPlantilla(nombreParam);
             }, 400); // Da tiempo para cargar el select
         }
+       const pn = editor.Panels;
+       const panelViews = pn.addPanel({
+      id: "options"
+    });
+    panelViews.get("buttons").add([
+      {
+        active: 1,
+        attributes: {
+          title: "Toggle Rulers"
+        },
+        label: `<svg width="18" viewBox="0 0 16 16"><path d="M0 8a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1H.5A.5.5 0 0 1 0 8z"/><path d="M4 3h8a1 1 0 0 1 1 1v2.5h1V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2.5h1V4a1 1 0 0 1 1-1zM3 9.5H2V12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9.5h-1V12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
+        command: "ruler-visibility",
+        id: "ruler-visibility"
+      }
+    ]);
+
+    editor.runCommand("ruler-visibility");
     });
 
     // ----------- FUNCIONES UTILIDAD -----------
@@ -392,5 +415,93 @@ function cargarPlantilla(nombre) {
         }
         window.location.href = '/Metabase/DescargarPdf?nombre=' + encodeURIComponent(nombre);
     });
+        // EDITAR NOMBRE
+    document.getElementById('editarNombreBtn').addEventListener('click', function () {
+        const select = document.getElementById('plantillasSelect');
+        const nombreActual = select.value;
+        if (!nombreActual) {
+            Swal.fire({ icon: 'warning', title: 'Sin selección', text: 'Selecciona una plantilla.' });
+            return;
+        }
+        Swal.fire({
+            title: 'Editar nombre',
+            input: 'text',
+            inputLabel: 'Nuevo nombre de la plantilla',
+            inputValue: nombreActual,
+            showCancelButton: true,
+            confirmButtonText: 'Renombrar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value) return 'Debes escribir un nombre';
+                if (plantillasDisponibles.includes(value)) return 'Ya existe una plantilla con ese nombre';
+            }
+        }).then(result => {
+            if (result.isConfirmed && result.value && result.value !== nombreActual) {
+                fetch('/Metabase/RenombrarPlantilla', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombreActual: nombreActual, nuevoNombre: result.value })
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(resp => {
+                    if (resp.ok) {
+                        Swal.fire({ icon: 'success', title: 'Renombrada', text: resp.data.mensaje });
+                        cargarListadoPlantillas(result.value);
+                        nombrePlantillaActual = result.value;
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: resp.data.mensaje });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo renombrar la plantilla.' });
+                });
+            }
+        });
+    });
+
+    // ELIMINAR PLANTILLA
+    document.getElementById('eliminarPlantillaBtn').addEventListener('click', function () {
+        const select = document.getElementById('plantillasSelect');
+        const nombre = select.value;
+        if (!nombre) {
+            Swal.fire({ icon: 'warning', title: 'Sin selección', text: 'Selecciona una plantilla.' });
+            return;
+        }
+        Swal.fire({
+            title: `¿Eliminar "${nombre}"?`,
+            text: "¡Esta acción no se puede deshacer!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(result => {
+            if (result.isConfirmed) {
+                fetch('/Metabase/EliminarPlantilla', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nombre)
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(resp => {
+                    if (resp.ok) {
+                        Swal.fire({ icon: 'success', title: 'Eliminada', text: resp.data.mensaje });
+                        cargarListadoPlantillas();
+                        // Limpia editor si eliminó la actual
+                        if (nombrePlantillaActual === nombre) {
+                            editor.setComponents('');
+                            editor.setStyle('');
+                            nombrePlantillaActual = null;
+                        }
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: resp.data.mensaje });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la plantilla.' });
+                });
+            }
+        });
+    });
+
    
 </script>

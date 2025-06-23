@@ -122,6 +122,81 @@ public class MetabaseController : Controller
             return StatusCode(500, new { mensaje = "Error al guardar la plantilla.", detalle = ex.Message });
         }
     }
+    public class RenombrarPlantillaDto
+    {
+        public string NombreActual { get; set; }
+        public string NuevoNombre { get; set; }
+    }
+
+    [HttpPost]
+    public IActionResult RenombrarPlantilla([FromBody] RenombrarPlantillaDto data)
+    {
+        if (data == null || string.IsNullOrWhiteSpace(data.NombreActual) || string.IsNullOrWhiteSpace(data.NuevoNombre))
+            return BadRequest(new { mensaje = "Faltan datos requeridos." });
+
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
+        var safeOldName = string.Join("_", data.NombreActual.Split(Path.GetInvalidFileNameChars()));
+        var safeNewName = string.Join("_", data.NuevoNombre.Split(Path.GetInvalidFileNameChars()));
+
+        // Archivos a renombrar
+        var archivos = new[] { ".html", ".css", ".png" };
+
+        try
+        {
+            foreach (var ext in archivos)
+            {
+                var oldPath = Path.Combine(carpeta, safeOldName + ext);
+                var newPath = Path.Combine(carpeta, safeNewName + ext);
+                if (System.IO.File.Exists(oldPath))
+                {
+                    // Si el nuevo ya existe, lo elimina (opcional: puede cambiarse la lógica)
+                    if (System.IO.File.Exists(newPath))
+                        System.IO.File.Delete(newPath);
+
+                    System.IO.File.Move(oldPath, newPath);
+                }
+            }
+            return Ok(new { mensaje = "Plantilla renombrada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al renombrar la plantilla.", detalle = ex.Message });
+        }
+    }
+    [HttpPost]
+    public IActionResult EliminarPlantilla([FromBody] string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return BadRequest(new { mensaje = "Falta el nombre de la plantilla." });
+
+        var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
+        var safeName = string.Join("_", nombre.Split(Path.GetInvalidFileNameChars()));
+        var extensiones = new[] { ".html", ".css", ".png" };
+
+        bool algunoEliminado = false;
+
+        try
+        {
+            foreach (var ext in extensiones)
+            {
+                var path = Path.Combine(carpeta, safeName + ext);
+                if (System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);
+                    algunoEliminado = true;
+                }
+            }
+
+            if (!algunoEliminado)
+                return NotFound(new { mensaje = "No se encontró la plantilla." });
+
+            return Ok(new { mensaje = "Plantilla eliminada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al eliminar la plantilla.", detalle = ex.Message });
+        }
+    }
 
     //[HttpPost]
     //public IActionResult GuardarPlantilla([FromBody] GuardarPlantillaDto data)
