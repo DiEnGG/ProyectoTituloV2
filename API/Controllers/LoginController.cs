@@ -20,55 +20,85 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            using var connection = new MySqlConnection(_configuration.GetConnectionString("MySqlConnection"));
-            await connection.OpenAsync();
-
-            using var command = new MySqlCommand("sp_LoginUsuario", connection)
+            try
             {
-                CommandType = CommandType.StoredProcedure
-            };
+                using var connection = new MySqlConnection(_configuration.GetConnectionString("MySqlConnection"));
+                await connection.OpenAsync();
 
-            command.Parameters.AddWithValue("@p_Email", request.Email);
+                using var command = new MySqlCommand("sp_LoginUsuario", connection)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
-            var outputUsuarioId = new MySqlParameter("@p_UsuarioId", MySqlDbType.Int32) { Direction = ParameterDirection.Output };
-            var outputNombre = new MySqlParameter("@p_Nombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
-            var outputPasswordHash = new MySqlParameter("@p_PasswordHash", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
-            var outputEmpresaNombre = new MySqlParameter("@p_EmpresaNombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
-            var outputRolNombre = new MySqlParameter("@p_RolNombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
-            var outputActivo = new MySqlParameter("@p_Activo", MySqlDbType.Bit) { Direction = ParameterDirection.Output };
+                command.Parameters.AddWithValue("@p_Email", request.Email);
 
-            command.Parameters.Add(outputUsuarioId);
-            command.Parameters.Add(outputNombre);
-            command.Parameters.Add(outputPasswordHash);
-            command.Parameters.Add(outputEmpresaNombre);
-            command.Parameters.Add(outputRolNombre);
-            command.Parameters.Add(outputActivo);
+                var outputUsuarioId = new MySqlParameter("@p_UsuarioId", MySqlDbType.Int32) { Direction = ParameterDirection.Output };
+                var outputNombre = new MySqlParameter("@p_Nombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
+                var outputPasswordHash = new MySqlParameter("@p_PasswordHash", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
+                var outputEmpresaNombre = new MySqlParameter("@p_EmpresaNombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
+                var outputRolNombre = new MySqlParameter("@p_RolNombre", MySqlDbType.VarChar, 255) { Direction = ParameterDirection.Output };
+                var outputActivo = new MySqlParameter("@p_Activo", MySqlDbType.Bit) { Direction = ParameterDirection.Output };
 
-            await command.ExecuteNonQueryAsync();
+                command.Parameters.Add(outputUsuarioId);
+                command.Parameters.Add(outputNombre);
+                command.Parameters.Add(outputPasswordHash);
+                command.Parameters.Add(outputEmpresaNombre);
+                command.Parameters.Add(outputRolNombre);
+                command.Parameters.Add(outputActivo);
 
+                await command.ExecuteNonQueryAsync();
 
-            //if ( !Convert.ToBoolean(outputExiste.Value) ) {
-            //    return Unauthorized(new LoginResponse { Exito = false, Mensaje = "Credenciales inválidas." });
-            //}
+                if (outputUsuarioId.Value == DBNull.Value || outputPasswordHash.Value == DBNull.Value)
+                {
+                    return Unauthorized(new LoginResponse
+                    {
+                        Exito = false,
+                        Mensaje = "Usuario no encontrado o inactivo."
+                    });
+                }
 
-            var passwordHash = outputPasswordHash.Value?.ToString();
+                var passwordHash = outputPasswordHash.Value?.ToString();
 
-            if (string.IsNullOrEmpty(passwordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, passwordHash))
-            {
-                return Unauthorized(new LoginResponse { Exito = false, Mensaje = "Credenciales inválidas." });
+                if (string.IsNullOrEmpty(passwordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, passwordHash))
+                {
+                    return Unauthorized(new LoginResponse
+                    {
+                        Exito = false,
+                        Mensaje = "Credenciales inválidas."
+                    });
+                }
+
+                return Ok(new LoginResponse
+                {
+                    Exito = true,
+                    Mensaje = "Inicio de sesión exitoso.",
+                    UsuarioId = Convert.ToInt32(outputUsuarioId.Value),
+                    Nombre = outputNombre.Value.ToString(),
+                    EmpresaNombre = outputEmpresaNombre.Value.ToString(),
+                    RolNombre = outputRolNombre.Value.ToString(),
+                    Activo = Convert.ToBoolean(outputActivo.Value)
+                });
             }
-
-            return Ok(new LoginResponse
+            catch (MySqlException sqlEx)
             {
-                Exito = true,
-                Mensaje = "Inicio de sesión exitoso.",
-                UsuarioId = Convert.ToInt32(outputUsuarioId.Value),
-                Nombre = outputNombre.Value.ToString(),
-                EmpresaNombre = outputEmpresaNombre.Value.ToString(),
-                RolNombre = outputRolNombre.Value.ToString(),
-                Activo = Convert.ToBoolean(outputActivo.Value)
-            });
+                // Error específico de MySQL (por ejemplo, error en el procedimiento)
+                return StatusCode(500, new LoginResponse
+                {
+                    Exito = false,
+                    Mensaje = "Error en la base de datos: " + sqlEx.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                // Error general
+                return StatusCode(500, new LoginResponse
+                {
+                    Exito = false,
+                    Mensaje = "Ocurrió un error inesperado: " + ex.Message
+                });
+            }
         }
+
 
     }
 }
